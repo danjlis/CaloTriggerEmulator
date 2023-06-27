@@ -68,7 +68,8 @@ CaloWaveFormSim::CaloWaveFormSim(const std::string& name, const std::string& fil
   , detector("ALL")
   , _verbose(0) 
 {
-
+  _gain_opts["LOW"] = GAIN::LOW;
+  _gain_opts["HIGH"] = GAIN::HIGH;
 }
 
 CaloWaveFormSim::~CaloWaveFormSim()
@@ -137,7 +138,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   h_template_bbc = static_cast<TProfile*>(fin4->Get("waveform_template"));
 
   light_collection_model.load_data_file(string(getenv("CALIBRATIONROOT")) + string("/CEMC/LightCollection/Prototype3Module.xml"),
-								   "data_grid_light_guide_efficiency", "data_grid_fiber_trans");
+					"data_grid_light_guide_efficiency", "data_grid_fiber_trans");
 
 
   for (int i = 0 ; i < 24576;i++)
@@ -243,23 +244,23 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
 
   // Create nodes for HCALIN
   if (IsDetector("HCALIN"))
-  {
-    PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "HCALIN"));
-    if (!detNode)
-      {
-	std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
-	detNode = new PHCompositeNode("HCALIN");
-	dstNode->addNode(detNode);
-      }
+    {
+      PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "HCALIN"));
+      if (!detNode)
+	{
+	  std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
+	  detNode = new PHCompositeNode("HCALIN");
+	  dstNode->addNode(detNode);
+	}
 
-    WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_HCALIN");
-    if (!waveforms)
-      {
-	waveforms = new WaveformContainerv1();
-	PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_HCALIN", "PHObject");
-	detNode->addNode(waveformcontainerNode);
-      }
-  }
+      WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_HCALIN");
+      if (!waveforms)
+	{
+	  waveforms = new WaveformContainerv1();
+	  PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_HCALIN", "PHObject");
+	  detNode->addNode(waveformcontainerNode);
+	}
+    }
   if (IsDetector("HCALOUT"))
     {
       PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "HCALOUT"));
@@ -277,7 +278,7 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
 	  PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_HCALOUT", "PHObject");
 	  detNode->addNode(waveformcontainerNode);
 	}
-  }
+    }
   return;
 }
 
@@ -414,16 +415,16 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   //for use in waveform generation
   //---------------------------------------------------------
 
-  TF1* f_fit_bbc = new TF1("f_fit_bbc",template_function_bbc,0,31,3);
+  TF1 *f_fit_bbc = new TF1("f_fit_bbc",template_function_bbc,0,31,3);
   f_fit_bbc->SetParameters(1,0,0);
 
-  TF1* f_fit_cemc = new TF1("f_fit_cemc",template_function_cemc,0,31,3);
+  TF1 *f_fit_cemc = new TF1("f_fit_cemc",template_function_cemc,0,31,3);
   f_fit_cemc->SetParameters(1,0,0);
 
-  TF1* f_fit_ihcal = new TF1("f_fit_ihcal",template_function_ihcal,0,31,3);
+  TF1 *f_fit_ihcal = new TF1("f_fit_ihcal",template_function_ihcal,0,31,3);
   f_fit_ihcal->SetParameters(1,0,0);
 
-  TF1* f_fit_ohcal = new TF1("f_fit_ohcal",template_function_ohcal,0,31,3);
+  TF1 *f_fit_ohcal = new TF1("f_fit_ohcal",template_function_ohcal,0,31,3);
   f_fit_ohcal->SetParameters(1,0,0);
 
   //-----------------------------------------------------
@@ -696,8 +697,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       // Get PMT charges
       //---------------------------------------------------------------------
       
-     int ich;
-     int npmt = _bbcpmts->get_npmt();
+      int ich;
+      int npmt = _bbcpmts->get_npmt();
 
       for (ich = 0; ich < npmt ; ich++)
 	{

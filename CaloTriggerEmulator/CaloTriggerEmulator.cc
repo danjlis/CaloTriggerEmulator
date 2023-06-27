@@ -76,6 +76,10 @@ int CaloTriggerEmulator::Init(PHCompositeNode* topNode)
       hm->registerHisto(trigger_fire_map[i]);
     }
 
+  full_fire_map = new TEfficiency("full_fire_map",";#eta_{bin};#phi_{bin}", 12 , -0.5, 11.5, 24, -0.5, 23.5);
+
+  hm->registerHisto(full_fire_map);
+
   return 0;
 }
 
@@ -211,6 +215,7 @@ int CaloTriggerEmulator::process_primitives()
 	  peak_primitive[i]->Fill(isum, id_peak);
 	  avg_primitive[i]->Fill(isum, peak);
 	  trigger_fire_map[i]->Fill(peak > 1, isum%4, isum/4);
+	  full_fire_map->Fill(peak >= 1, ((i%3) * 4) + isum%4, ((i/3) * 4) + isum/4);
 	  primitives[i]->Fill(isum, peak);
 	  if (_verbose > 3) std::cout<< "." << std::endl;
 	  m_trigger_primitives.push_back(trigger_prims);

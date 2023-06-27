@@ -17,7 +17,7 @@ R__LOAD_LIBRARY(libcalotriggeremulator.so)
 R__LOAD_LIBRARY(libcalopacketgetter.so)
 #endif
 
-  void Fun4All_CaloTrigEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/raw/beam_Hcal-00014232-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root")
+  void Fun4All_CaloTrigEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/raw/beam_Hcal-00020096-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root")
 {
   gSystem->Load("libg4dst");
   gSystem->Load("libcalowaveformsim");

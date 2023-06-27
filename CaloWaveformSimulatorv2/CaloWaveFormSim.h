@@ -48,6 +48,7 @@ class CaloWaveFormSim : public SubsysReco
   void Detector(const std::string &name) { detector = name; }
   void SetNsamples(int nsamples) { _nsamples = nsamples; }
   void SetNoise(int noiselevel) { _noiselevel = noiselevel; }
+  void SetGain(std::string gain){ _gain = _gain_opts[gain];}
 
  protected:
 
@@ -67,6 +68,15 @@ class CaloWaveFormSim : public SubsysReco
   TRandom3* rnd;
   int _verbose = 1;
   int _nsamples = 16;
+
+  enum GAIN {
+    LOW = 0,
+    HIGH = 1
+  };
+
+  int _gain= GAIN::LOW;
+
+  std::map<std::string, int>  _gain_opts;
 
   int ROWDIM = 320;
   int COLUMNDIM = 27;

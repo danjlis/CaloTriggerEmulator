@@ -10,6 +10,7 @@
 # Precompiled Headers
 *.gch
 *.pch
+*.pdf
 
 # Compiled Dynamic libraries
 *.so
@@ -31,3 +32,7 @@
 *.exe
 *.out
 *.app
+
+*.root
+*.prdf
+*.list

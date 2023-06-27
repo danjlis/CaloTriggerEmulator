@@ -87,6 +87,7 @@ class CaloTriggerEmulator : public SubsysReco
   TH2D *peak_primitive[24];
   TH2D *primitives[24];
   TEfficiency *trigger_fire_map[24];
+  TEfficiency *full_fire_map;
   
   //! Lookup tables
   unsigned int m_l1_adc_table[1024];
