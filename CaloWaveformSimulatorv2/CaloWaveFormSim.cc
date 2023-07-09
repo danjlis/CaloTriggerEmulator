@@ -70,6 +70,8 @@ CaloWaveFormSim::CaloWaveFormSim(const std::string& name, const std::string& fil
 {
   _gain_opts["LOW"] = GAIN::LOW;
   _gain_opts["HIGH"] = GAIN::HIGH;
+
+  _raw_towers_ohcal = new TowerInfoContainer(TowerInfoContainer::Detector::HCAL);
 }
 
 CaloWaveFormSim::~CaloWaveFormSim()
@@ -278,6 +280,7 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
 	  PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_HCALOUT", "PHObject");
 	  detNode->addNode(waveformcontainerNode);
 	}
+
     }
   return;
 }
@@ -359,12 +362,20 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	}
 
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
-      _hits_ohcal = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_HCALOUT");
-      if (!_hits_ohcal)
-	{
-	  std::cout << "OHCal hits not found - Fatal Error" << std::endl;
-	  exit(1);
-	}
+      // _hits_ohcal = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_HCALOUT");
+      // if (!_hits_ohcal)
+      // 	{
+      // 	  std::cout << "OHCal hits not found - Fatal Error" << std::endl;
+      // 	  exit(1);
+      // 	}
+      _slats_ohcal = findNode::getClass<PHG4CellContainer>(topNode, "G4CELL_HCALOUT");
+      if (!_slats_ohcal)
+      	{
+      	  std::cout << "OHCal hits not found - Fatal Error" << std::endl;
+	  gSystem->Exit(1);
+      	  exit(1);
+      	}
+      
       
     }
 
@@ -624,46 +635,47 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   if (IsDetector("HCALOUT"))
     {
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
+      _raw_towers_ohcal->Reset();
       //-----------------------------------------------------------------------
       //Loop over G4Hits to build a waveform simulation
       //-----------------------------------------------------------------------
-      PHG4HitContainer::ConstRange hit_range = _hits_ohcal->getHits();
-      for (PHG4HitContainer::ConstIterator hit_iter = hit_range.first; hit_iter != hit_range.second; hit_iter++)
+      PHG4CellContainer::ConstRange cell_range = _slats_ohcal->getCells();
+      for (PHG4CellContainer::ConstIterator cell_iter = cell_range.first; cell_iter != cell_range.second; cell_iter++)
 	{
-	  //-----------------------------------------------------------------
-	  //Extract position information for each G4hit 
-	  //information for each G4hit in the calorimeter
-	  //-----------------------------------------------------------------
-	  short icolumn = hit_iter->second->get_scint_id();
-	  int introw = (hit_iter->second->get_hit_id() >> PHG4HitDefs::hit_idbits);
+	  PHG4Cell *cell = cell_iter->second;
+	  short twrrow = get_tower_row(PHG4CellDefs::ScintillatorSlatBinning::get_row(cell->get_cellid()));
+	  
+	  double light_yield = cell->get_light_yield();
+      
+	  light_yield *= m_DecalArray.at(PHG4CellDefs::ScintillatorSlatBinning::get_column(cell->get_cellid())).at(PHG4CellDefs::ScintillatorSlatBinning::get_row(cell->get_cellid()));
 
 
-	  if (introw >= ROWDIM || introw < 0)
+	  TowerInfo *towerinfo;
+	  
+	  unsigned int etabin = PHG4CellDefs::ScintillatorSlatBinning::get_column(cell->get_cellid());
+	  unsigned int phibin = twrrow;
+	  
+	  unsigned int towerkey = (etabin << 16U) + phibin;
+
+	  towerinfo = _raw_towers_ohcal->get_tower_at_key(towerkey);
+	  if (!towerinfo)
 	    {
-	      std::cout << __PRETTY_FUNCTION__ << " row " << introw
-			<< " exceed array size: " << ROWDIM
-			<< " adjust ROWDIM and recompile" << std::endl;
+	      std::cout << __PRETTY_FUNCTION__ << ": missing towerkey = " << towerkey << " in m_TowerInfoContainer!";
 	      exit(1);
 	    }
+	  else
+	    {
+	      towerinfo->set_energy(towerinfo->get_energy() + light_yield);
+	    }
 
+	}
 
-	  int towerphi = introw/5;
-	  int towereta = icolumn;
-
-	  //----------------------------------------------------------------------------------------------------
-	  //Extract light yield from g4hit and correct for light collection efficiency
-	  //----------------------------------------------------------------------------------------------------
-
-	  double light_yield = hit_iter->second->get_light_yield();  //raw_light_yield has no MEPHI maps applied, light_yield aoppplies the maps change at some point
-	  //-------------------------------------------------------------------------
-	  //Map the G4hits to the corresponding CEMC tower
-	  //-------------------------------------------------------------------------
-      
-	  int etabin = towereta;
-	  int phibin = towerphi;
-	  //------------------------------------------------------------------------
-	  // Map Calo Tower to channel number
-	  //------------------------------------------------------------------------
+      TowerInfoContainer::ConstRange tower_range = _raw_towers_ohcal->getTowers();
+      for (TowerInfoContainer::ConstIterator tower_iter = tower_range.first; tower_iter != tower_range.second; tower_iter++)
+	{
+	  TowerInfo *towerinfo = (*tower_iter)->second;
+	  unsigned int phibin = _raw_towers_ohcal->GetTowerPhiBin((*tower_iter)->first());
+	  unsigned int etabin = _raw_towers_ohcal->GetTowerEtaBin((*tower_iter)->first());
 	  int ADC = (phibin/8)*3 + (etabin/8);
 	  int channelnumber = ADCDefs::hcaladc[etabin%8][(phibin%8)%2] + 16*((phibin%8)/2);
 	  int towernumber = ADC*64 + channelnumber;
@@ -672,10 +684,12 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  //Convert the G4hit into a waveform contribution
 	  //---------------------------------------------------------------------
 	  // float t0 = 0.5*(hit_iter->second->get_t(0)+hit_iter->second->get_t(1)) / 16.66667;   //Average of g4hit time downscaled by 16.667 ns/time sample 
-	  float t0 = (hit_iter->second->get_t(0)) / 16.66667;   //Place waveform at the starting time of the G4hit, avoids issues caused by excessively long lived g4hits
+
+	  float adc_signal = towerinfo->get_energy() * _hcalout_lightyield_to_ADC;
+	  float t0 = 0;
 	  float tmax =16.667*16 ;
 	  float tmin = -20;
-	  f_fit_ohcal->SetParameters(light_yield*5000,_shiftval_ohcal+t0,0);            //Set the waveform template to match the expected signal from such a hit
+	  f_fit_ohcal->SetParameters(adc_signal,_shiftval_ohcal+t0,0);            //Set the waveform template to match the expected signal from such a hit
 
 	  //-------------------------------------------------------------------------------------------------------------
 	  //For each tower add the new waveform contribution to the total waveform

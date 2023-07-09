@@ -56,22 +56,37 @@ pkginclude_HEADERS = \
 	MBDTriggerEmulator.h \
 	CaloTriggerEmulator.h \
 	MBDPmtBuilder.h \
-	CaloPacketGetter.h
+	CaloPacketGetter.h \
+	TriggerDefs.h \
+	TriggerPrimitive.h \
+	TriggerPrimitiveContainer.h \
+	TriggerPrimitiveContainerv1.h
 
 ROOT_DICTS = \
 	LL1Out_Dict.cc \
-	LL1Outv1_Dict.cc
+	LL1Outv1_Dict.cc \
+	TriggerPrimitive_Dict.cc \
+	TriggerPrimitiveContainer_Dict.cc \
+	TriggerPrimitiveContainerv1_Dict.cc
 
 pcmdir = $(libdir)
 
 nobase_dist_pcm_DATA = \
 	LL1Out_Dict_rdict.pcm \
-	LL1Outv1_Dict_rdict.pcm
+	LL1Outv1_Dict_rdict.pcm \
+	TriggerPrimitive_Dict_rdict.pcm \
+	TriggerPrimitiveContainer_Dict_rdict.pcm \
+	TriggerPrimitiveContainerv1_Dict_rdict.pcm
+
 
 libll1out_la_SOURCES = \
 	$(ROOT_DICTS) \
 	LL1Out.cc \
-	LL1Outv1.cc
+	LL1Outv1.cc \
+	TriggerDefs.cc \
+	TriggerPrimitive.cc \
+	TriggerPrimitiveContainer.cc \
+	TriggerPrimitiveContainerv1.cc 
 
 libcalotriggeremulator_la_SOURCES = \
 	CaloTriggerEmulator.cc
@@ -84,7 +99,6 @@ libmbdpmtbuilder_la_SOURCES = \
 
 libcalopacketgetter_la_SOURCES = \
 	CaloPacketGetter.cc
-
 
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^

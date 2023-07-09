@@ -11,7 +11,9 @@
 #include <g4detectors/PHG4FullProjSpacalCellReco.h>
 #include "WaveformContainerv1.h"
 #include <g4main/PHG4HitContainer.h>
+#include <g4main/PHG4CellContainer.h>
 #include <g4main/PHG4TruthInfoContainer.h>
+#include <caloreco/TowerInfoContainer.h>
 
 // Forward declarations
 class Fun4AllHistoManager;
@@ -101,7 +103,9 @@ class CaloWaveFormSim : public SubsysReco
   PHG4CylinderCellGeomContainer *_seggeo;
   PHG4HitContainer *_hits_cemc;
   PHG4HitContainer *_hits_ihcal;
-  PHG4HitContainer *_hits_ohcal;
+  PHG4CellContainer *_slats_ohcal;
+  TowerInfoContainer *_raw_towers_ohcal;
+
   BbcPmtContainer *_bbcpmts;
 };
 

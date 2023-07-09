@@ -44,6 +44,6 @@ void Fun4All_CaloTrigSim(const char *outfile = "trees.root", const char *outfile
   se->registerInputManager(in3);
   se->registerInputManager(in2);
   se->registerInputManager(in);
-  se->run(2);
+  se->run(3);
   se->End();
 }
