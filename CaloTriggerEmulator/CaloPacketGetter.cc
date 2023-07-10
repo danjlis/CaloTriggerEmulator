@@ -187,6 +187,10 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	  for (int channel = 0; channel < m_nchannels; channel++)
 	    {
 	      std::vector<int> waveform;
+	      key = 0;
+	      key |= (pid << 16);
+	      key |= channel;
+	      keys.push_back(key);
 	      waveform.reserve(m_nsamples);
 	      for (int samp = 0; samp < m_nsamples; samp++)
 		{
