@@ -17,7 +17,7 @@ R__LOAD_LIBRARY(libcalotriggeremulator.so)
 R__LOAD_LIBRARY(libcalopacketgetter.so)
 #endif
 
-  void Fun4All_CaloTrigEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/raw/beam_Hcal-00020096-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root")
+  void Fun4All_CaloTrigEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/raw/beam_Hcal-00020096-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
 {
   gSystem->Load("libg4dst");
   gSystem->Load("libcalowaveformsim");
@@ -26,14 +26,23 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
 
   Fun4AllServer *se = Fun4AllServer::instance();
 
-  CaloPacketGetter *ca = new CaloPacketGetter("CALOPACKETGETTER","HCALOUT");
+  CaloPacketGetter *ca = new CaloPacketGetter("CALOPACKETGETTER_HCALOUT","HCALOUT");
   ca->set_nsamples(31);
   se->registerSubsystem(ca);
+
+  CaloPacketGetter *ca1 = new CaloPacketGetter("CALOPACKETGETTER_HCALIN","HCALIN");
+  ca1->set_nsamples(31);
+  se->registerSubsystem(ca1);
   
-  CaloTriggerEmulator *te = new CaloTriggerEmulator("CALOTRIGGEREMULATOR",outfile2);
-  te->TriggerType("HCALOUT");
+  CaloTriggerEmulator *te = new CaloTriggerEmulator("CALOTRIGGEREMULATOR_HCALOUT",outfile2);
+  te->setTriggerType("HCALOUT");
   te->Verbosity(0);
   se->registerSubsystem(te);
+
+  CaloTriggerEmulator *te1 = new CaloTriggerEmulator("CALOTRIGGEREMULATOR_HCALIN",outfile3);
+  te1->setTriggerType("HCALIN");
+  te1->Verbosity(0);
+  se->registerSubsystem(te1);
   
   Fun4AllInputManager *in = new Fun4AllPrdfInputManager("in");
   in->fileopen(fname1);
@@ -41,6 +50,6 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
 
 // Fun4All
 
-  se->run(100000);
+  se->run(1000);
   se->End();
 }

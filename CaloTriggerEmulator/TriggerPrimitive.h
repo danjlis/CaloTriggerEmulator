@@ -22,6 +22,7 @@ class TriggerPrimitive : public PHObject
   typedef std::pair<ConstIter, ConstIter> ConstRange;
 
   TriggerPrimitive();
+  TriggerPrimitive(TriggerDefs::TriggerPrimKey key);
   virtual ~TriggerPrimitive();
   
   /// Clear Event from memory
@@ -35,6 +36,9 @@ class TriggerPrimitive : public PHObject
 
   virtual TriggerDefs::TriggerPrimKey getTriggerPrimitiveKey() { return m_triggerprimkey;}
 
+  virtual ConstRange getSums() const;
+  virtual Range getSums();
+  
   virtual size_t size() {return 0;}
 
  private:

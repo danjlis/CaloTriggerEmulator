@@ -53,6 +53,7 @@ pkginclude_HEADERS = \
 	LL1Defs.h \
 	LL1Out.h \
 	LL1Outv1.h \
+	LL1Outv2.h \
 	MBDTriggerEmulator.h \
 	CaloTriggerEmulator.h \
 	MBDPmtBuilder.h \
@@ -65,6 +66,7 @@ pkginclude_HEADERS = \
 ROOT_DICTS = \
 	LL1Out_Dict.cc \
 	LL1Outv1_Dict.cc \
+	LL1Outv2_Dict.cc \
 	TriggerPrimitive_Dict.cc \
 	TriggerPrimitiveContainer_Dict.cc \
 	TriggerPrimitiveContainerv1_Dict.cc
@@ -74,6 +76,7 @@ pcmdir = $(libdir)
 nobase_dist_pcm_DATA = \
 	LL1Out_Dict_rdict.pcm \
 	LL1Outv1_Dict_rdict.pcm \
+	LL1Outv2_Dict_rdict.pcm \
 	TriggerPrimitive_Dict_rdict.pcm \
 	TriggerPrimitiveContainer_Dict_rdict.pcm \
 	TriggerPrimitiveContainerv1_Dict_rdict.pcm
@@ -83,6 +86,7 @@ libll1out_la_SOURCES = \
 	$(ROOT_DICTS) \
 	LL1Out.cc \
 	LL1Outv1.cc \
+	LL1Outv2.cc \
 	TriggerDefs.cc \
 	TriggerPrimitive.cc \
 	TriggerPrimitiveContainer.cc \

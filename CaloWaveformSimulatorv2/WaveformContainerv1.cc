@@ -34,8 +34,15 @@ void WaveformContainerv1::Reset()
 //______________________________________
 void WaveformContainerv1::identify(std::ostream& out) const
 {
-  out << "identify yourself: I am a WaveformContainer object" << std::endl;
+  out << "identify yourself: I am a WaveformContainer object for " << _det << std::endl;
   out << "Size : " << _waveforms.size() << std::endl;
+  ConstRange range = getWaveforms();
+  for (auto iter = range.first; iter != range.second ; ++iter)
+    {
+      out << "Wave "<<(*iter).first<<": ";
+      for ( auto i = (*iter).second->begin(); i != (*iter).second->end(); ++i) out << (*i) << " ";
+      out <<" "<<std::endl;
+    }
 }
 
 
@@ -85,6 +92,14 @@ std::vector<int>* WaveformContainerv1::get_waveform_at_channel(int index)
   return _waveforms[index];
 }
 
+std::vector<int>* WaveformContainerv1::get_waveform_at_key(int key)
+{
+
+  if (!_waveforms[key]) return nullptr;
+  
+  return _waveforms[key];
+}
+
 
 WaveformContainerv1::ConstRange WaveformContainerv1::getWaveforms() const
 {
@@ -102,3 +117,8 @@ void WaveformContainerv1::set_waveform_at_channel(int index, std::vector<int>* w
   _waveforms[index] = wave;
 }
 
+void WaveformContainerv1::set_waveform_at_key(int key, std::vector<int>* wave)
+{
+  int index = key; 
+  _waveforms[index] = wave;
+}

@@ -21,26 +21,33 @@ namespace TriggerDefs
 
   enum TriggerId
   {
-    mbdTId = 0,
-    jetTId = 1,
-    pairTId = 2,
-    cosmicTId = 3,
+    noneTId = 0,
+    mbdTId = 1,
+    jetTId = 2,
+    pairTId = 3,
+    cosmicTId = 4,
   };
 
   enum DetectorId
   {
-    mbdDId = 0,
-    hcalinDId = 1,
-    hcaloutDId = 2,
-    emcalDId = 3,
+    noneDId = 0,
+    mbdDId = 1,
+    hcalinDId = 2,
+    hcaloutDId = 3,
+    emcalDId = 4,
   };
 
   enum PrimitiveId
   {
-    mbdPId = 0,
-    calPId = 1,
+    nonePId = 0,
+    mbdPId = 1,
+    calPId = 2,
   };
 
+  TriggerId GetTriggerId(std::string trigger);
+  DetectorId GetDetectorId(std::string detector);
+  PrimitiveId GetPrimitiveId(std::string primitive);
+  
   static const unsigned int kBitShiftPrimitiveLocId __attribute__((unused)) = 4;
   static const unsigned int kBitShiftSumLocId __attribute__((unused)) = 0;
 

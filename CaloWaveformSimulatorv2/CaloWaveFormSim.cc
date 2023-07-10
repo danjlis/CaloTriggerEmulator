@@ -71,7 +71,7 @@ CaloWaveFormSim::CaloWaveFormSim(const std::string& name, const std::string& fil
   _gain_opts["LOW"] = GAIN::LOW;
   _gain_opts["HIGH"] = GAIN::HIGH;
 
-  _raw_towers_ohcal = new TowerInfoContainer(TowerInfoContainer::Detector::HCAL);
+  _raw_towers_ohcal = new TowerInfoContainerv1(TowerInfoContainer::DETECTOR::HCAL);
 }
 
 CaloWaveFormSim::~CaloWaveFormSim()
@@ -372,8 +372,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       if (!_slats_ohcal)
       	{
       	  std::cout << "OHCal hits not found - Fatal Error" << std::endl;
-	  gSystem->Exit(1);
-      	  exit(1);
+	  exit(1);
       	}
       
       
@@ -474,6 +473,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       PHG4CylinderCellGeom_Spacalv1 *geo = dynamic_cast<PHG4CylinderCellGeom_Spacalv1 *>(geo_raw);
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
       PHG4HitContainer::ConstRange hit_range = _hits_cemc->getHits();
+
       for (PHG4HitContainer::ConstIterator hit_iter = hit_range.first; hit_iter != hit_range.second; hit_iter++)
 	{
 	  //-----------------------------------------------------------------
@@ -643,13 +643,10 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       for (PHG4CellContainer::ConstIterator cell_iter = cell_range.first; cell_iter != cell_range.second; cell_iter++)
 	{
 	  PHG4Cell *cell = cell_iter->second;
-	  short twrrow = get_tower_row(PHG4CellDefs::ScintillatorSlatBinning::get_row(cell->get_cellid()));
+	  short twrrow = PHG4CellDefs::ScintillatorSlatBinning::get_row(cell->get_cellid());
 	  
 	  double light_yield = cell->get_light_yield();
       
-	  light_yield *= m_DecalArray.at(PHG4CellDefs::ScintillatorSlatBinning::get_column(cell->get_cellid())).at(PHG4CellDefs::ScintillatorSlatBinning::get_row(cell->get_cellid()));
-
-
 	  TowerInfo *towerinfo;
 	  
 	  unsigned int etabin = PHG4CellDefs::ScintillatorSlatBinning::get_column(cell->get_cellid());
@@ -670,12 +667,13 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
 	}
 
-      TowerInfoContainer::ConstRange tower_range = _raw_towers_ohcal->getTowers();
-      for (TowerInfoContainer::ConstIterator tower_iter = tower_range.first; tower_iter != tower_range.second; tower_iter++)
+
+      for (auto tower_iter = 0 ; tower_iter < static_cast<int>(_raw_towers_ohcal->size()); tower_iter++)
 	{
-	  TowerInfo *towerinfo = (*tower_iter)->second;
-	  unsigned int phibin = _raw_towers_ohcal->GetTowerPhiBin((*tower_iter)->first());
-	  unsigned int etabin = _raw_towers_ohcal->GetTowerEtaBin((*tower_iter)->first());
+	  int key = _raw_towers_ohcal->encode_hcal(tower_iter);
+	  TowerInfo *towerinfo = _raw_towers_ohcal->get_tower_at_key(key);
+	  unsigned int phibin = _raw_towers_ohcal->getTowerPhiBin(key);
+	  unsigned int etabin = _raw_towers_ohcal->getTowerEtaBin(key);
 	  int ADC = (phibin/8)*3 + (etabin/8);
 	  int channelnumber = ADCDefs::hcaladc[etabin%8][(phibin%8)%2] + 16*((phibin%8)/2);
 	  int towernumber = ADC*64 + channelnumber;
@@ -695,7 +693,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  //For each tower add the new waveform contribution to the total waveform
 	  //-------------------------------------------------------------------------------------------------------------
       
-	  if (hit_iter->second->get_edep()*5000 > 1 && hit_iter->second->get_t(1) >= tmin && hit_iter->second->get_t(0) <= tmax)
+	  if (towerinfo->get_energy()*5000 > 1 && towerinfo->get_time() >= tmin && towerinfo->get_time() <= tmax)
 	    {
 	      for (int j = 0; j < 16;j++) // 16 is the number of time samples
 		{

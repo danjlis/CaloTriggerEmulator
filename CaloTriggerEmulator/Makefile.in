@@ -142,11 +142,11 @@ am_libcalotriggeremulator_la_OBJECTS = CaloTriggerEmulator.lo
 libcalotriggeremulator_la_OBJECTS =  \
 	$(am_libcalotriggeremulator_la_OBJECTS)
 libll1out_la_DEPENDENCIES =
-am__objects_1 = LL1Out_Dict.lo LL1Outv1_Dict.lo \
+am__objects_1 = LL1Out_Dict.lo LL1Outv1_Dict.lo LL1Outv2_Dict.lo \
 	TriggerPrimitive_Dict.lo TriggerPrimitiveContainer_Dict.lo \
 	TriggerPrimitiveContainerv1_Dict.lo
 am_libll1out_la_OBJECTS = $(am__objects_1) LL1Out.lo LL1Outv1.lo \
-	TriggerDefs.lo TriggerPrimitive.lo \
+	LL1Outv2.lo TriggerDefs.lo TriggerPrimitive.lo \
 	TriggerPrimitiveContainer.lo TriggerPrimitiveContainerv1.lo
 libll1out_la_OBJECTS = $(am_libll1out_la_OBJECTS)
 libmbdpmtbuilder_la_DEPENDENCIES = libll1out.la
@@ -449,6 +449,7 @@ pkginclude_HEADERS = \
 	LL1Defs.h \
 	LL1Out.h \
 	LL1Outv1.h \
+	LL1Outv2.h \
 	MBDTriggerEmulator.h \
 	CaloTriggerEmulator.h \
 	MBDPmtBuilder.h \
@@ -461,6 +462,7 @@ pkginclude_HEADERS = \
 ROOT_DICTS = \
 	LL1Out_Dict.cc \
 	LL1Outv1_Dict.cc \
+	LL1Outv2_Dict.cc \
 	TriggerPrimitive_Dict.cc \
 	TriggerPrimitiveContainer_Dict.cc \
 	TriggerPrimitiveContainerv1_Dict.cc
@@ -469,6 +471,7 @@ pcmdir = $(libdir)
 nobase_dist_pcm_DATA = \
 	LL1Out_Dict_rdict.pcm \
 	LL1Outv1_Dict_rdict.pcm \
+	LL1Outv2_Dict_rdict.pcm \
 	TriggerPrimitive_Dict_rdict.pcm \
 	TriggerPrimitiveContainer_Dict_rdict.pcm \
 	TriggerPrimitiveContainerv1_Dict_rdict.pcm
@@ -477,6 +480,7 @@ libll1out_la_SOURCES = \
 	$(ROOT_DICTS) \
 	LL1Out.cc \
 	LL1Outv1.cc \
+	LL1Outv2.cc \
 	TriggerDefs.cc \
 	TriggerPrimitive.cc \
 	TriggerPrimitiveContainer.cc \
@@ -636,6 +640,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Out_Dict.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv1_Dict.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv2_Dict.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MBDPmtBuilder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MBDTriggerEmulator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TriggerDefs.Plo@am__quote@

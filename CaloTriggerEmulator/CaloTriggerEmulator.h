@@ -1,10 +1,9 @@
 #ifndef _CALOTRIGGEREMULATOR_H__
 #define _CALOTRIGGEREMULATOR_H__
-#include <Event/Event.h>
-#include <Event/EventTypes.h>
-#include <Event/packet.h>
-#include <calowaveformsim/WaveformContainerv1.h>
 
+#include <calowaveformsim/WaveformContainerv1.h>
+#include "TriggerPrimitive.h"
+#include "TriggerPrimitiveContainerv1.h"
 #include <cstdint>
 
 #include <fun4all/SubsysReco.h>
@@ -12,7 +11,7 @@
 #include <TProfile.h>
 #include <TEfficiency.h>
 #include <TH2.h>
-#include "LL1Outv1.h"
+#include "LL1Outv2.h"
 
 // Forward declarations
 class Fun4AllHistoManager;
@@ -61,14 +60,16 @@ class CaloTriggerEmulator : public SubsysReco
   int process_primitives();
 
   //! Set TriggerType
-  void TriggerType(const std::string &name) { _trigger = name; }
-
-  void SetThresholds();
+  void setTriggerType(const std::string &name) { _trigger = name; }
 
   void Verbosity(const int verbosity) { _verbose = verbosity; }
 
+  void identify();
  protected:
   std::string outfilename;
+  std::string _ll1_nodename;
+  std::string _waveform_nodename;
+
   Fun4AllHistoManager *hm;
   TFile *outfile;
   TTree *_tree;
@@ -77,41 +78,41 @@ class CaloTriggerEmulator : public SubsysReco
   std::string _trigger;
   
   //! Waveform conatiner
-  WaveformContainerv1 *_waveforms_hcal;
+  WaveformContainerv1 *_waveforms;
 
   //! LL1 Out
-  LL1Outv1 *_ll1_hcal;
-  std::vector<std::vector<unsigned int>> m_trigger_primitives;
+  LL1Outv2 *_ll1out;
+  TriggerPrimitiveContainerv1 *_primitives;
+  TriggerPrimitive *_primitive;
+  std::vector<unsigned int> *_sum;
 
-  TProfile *avg_primitive[24];
-  TH2D *peak_primitive[24];
-  TH2D *primitives[24];
-  TEfficiency *trigger_fire_map[24];
-  TEfficiency *full_fire_map;
+  TProfile *avg_primitive;
+  TH2D *peak_primitive;
+  TH2D *primitives;
+  TEfficiency *trigger_fire_map;
+
+  std::vector<TProfile*> v_avg_primitive;
+  std::vector<TH2D*> v_peak_primitive;
+  std::vector<TH2D*> v_primitives;
+  std::vector<TEfficiency*> v_trigger_fire_map;
   
   //! Lookup tables
   unsigned int m_l1_adc_table[1024];
 
-  //! Trigger primitives
-  unsigned int m_trig_sums[24][16];
-
-  unsigned int m_trigger_word;
-  //! Thresholds
-  unsigned int m_nhit1, m_nhit2, m_timediff1, m_timediff2, m_timediff3;
-  //! Waveforms
-  int m_waveforms_hcal[24*64][31];
-  int m_peak_sub_ped[24*64][25];
+  std::map<int, std::vector<int>*> m_peak_sub_ped;
   
   //! Verbosity
   int _verbose;
   int _nevent;
 
+  int _n_sums;
+  int _n_primitives;
+  int _m_trig_sub_delay;
+
   int m_isdata;
-  int m_nsamples = 16;
-  int m_packet_low, m_packet_high;
+  int m_nsamples = 31;
 
-  Event *_event;
-
+  std::map<std::string, int> _n_prim_map;
 };
 
 #endif

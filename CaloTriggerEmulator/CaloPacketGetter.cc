@@ -135,7 +135,8 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
       break;
     }
   }
-
+  unsigned int key;
+  std::vector<unsigned int> keys;
   std::vector<std::vector<int>> waveforms;
   if (m_isdata)
   {
@@ -164,6 +165,10 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	    {
 	      //	      std::cout << "Channel "<<channel<< " : ";
 	      std::vector<int> waveform;
+	      key = 0;
+	      key |= (pid << 16);
+	      key |= channel;
+	      keys.push_back(key);
 	      waveform.reserve(m_nsamples);
 	      for (int samp = 0; samp < m_nsamples; samp++)
 		{
@@ -219,7 +224,7 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 
       //      std::cout << " "<<std::endl;
 	
-      m_WaveformContainer->set_waveform_at_channel(iwave, wave);
+      m_WaveformContainer->set_waveform_at_key(keys[iwave], wave);
       iwave++;
     }
 

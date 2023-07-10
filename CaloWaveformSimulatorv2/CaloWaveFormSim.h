@@ -11,9 +11,9 @@
 #include <g4detectors/PHG4FullProjSpacalCellReco.h>
 #include "WaveformContainerv1.h"
 #include <g4main/PHG4HitContainer.h>
-#include <g4main/PHG4CellContainer.h>
+#include <g4detectors/PHG4CellContainer.h>
 #include <g4main/PHG4TruthInfoContainer.h>
-#include <caloreco/TowerInfoContainer.h>
+#include <calobase/TowerInfoContainerv1.h>
 
 // Forward declarations
 class Fun4AllHistoManager;
@@ -78,6 +78,10 @@ class CaloWaveFormSim : public SubsysReco
 
   int _gain= GAIN::LOW;
 
+
+
+  float _hcalout_lightyield_to_ADC = 0.001;
+  
   std::map<std::string, int>  _gain_opts;
 
   int ROWDIM = 320;
@@ -104,7 +108,7 @@ class CaloWaveFormSim : public SubsysReco
   PHG4HitContainer *_hits_cemc;
   PHG4HitContainer *_hits_ihcal;
   PHG4CellContainer *_slats_ohcal;
-  TowerInfoContainer *_raw_towers_ohcal;
+  TowerInfoContainerv1 *_raw_towers_ohcal;
 
   BbcPmtContainer *_bbcpmts;
 };

@@ -35,8 +35,13 @@ void TriggerPrimitiveContainerv1::Reset()
 //______________________________________
 void TriggerPrimitiveContainerv1::identify(std::ostream& out) const
 {
-  out << "identify yourself: I am a TriggerPrimitiveContainer object" << std::endl;
-  out << "Size : " << _primitives.size() << std::endl;
+  out << __FILE__ << __FUNCTION__ << "Trigger key: "<<m_triggerkey<<std::endl;
+  ConstRange range = getTriggerPrimitives();
+  for (auto iter = range.first; iter != range.second; ++iter)
+    {
+      (*iter).second->identify();
+    }
+
 }
 
 

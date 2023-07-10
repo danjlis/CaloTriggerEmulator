@@ -30,8 +30,10 @@ class WaveformContainerv1 : public WaveformContainer
   virtual void set_Detector(std::string &det_name);
 
   virtual std::vector<int>* get_waveform_at_channel(int /* index */ ) override;
+  virtual std::vector<int>* get_waveform_at_key(int /* index */ ) ;
 
   virtual void set_waveform_at_channel(int /* index */, std::vector<int>* ) override;
+  virtual void set_waveform_at_key(int /* index */, std::vector<int>* );
 
   ConstRange getWaveforms(void) const;
   Range getWaveforms(void);

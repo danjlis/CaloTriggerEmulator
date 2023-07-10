@@ -26,17 +26,16 @@ class TriggerPrimitiveContainerv1 : public TriggerPrimitiveContainer
   virtual void identify(std::ostream& os = std::cout) const override;
   virtual int isValid() const override;
 
-  virtual void set_Trigger(TriggerDefs::TriggerId triggerid) {m_triggerkey = TriggerDefs::getTriggerKey(triggerid);}
+  virtual void setTriggerType(TriggerDefs::TriggerId triggerid) {m_triggerkey = TriggerDefs::getTriggerKey(triggerid);}
 
   virtual TriggerPrimitive* get_primitive_at_key(TriggerDefs::TriggerPrimKey /* index */ ) override;
 
   virtual void add_primitive(TriggerDefs::TriggerPrimKey , TriggerPrimitive* ) override;
 
   virtual TriggerDefs::TriggerKey getTriggerKey() {return m_triggerkey;}
-  ConstRange getTriggerPrimitives() const;
-  
-  Range getTriggerPrimitives();
 
+  ConstRange getTriggerPrimitives() const;  
+  Range getTriggerPrimitives();
 
   virtual size_t size() override { return _primitives.size();}
 
