@@ -39,7 +39,7 @@ class TriggerPrimitive : public PHObject
   virtual ConstRange getSums() const;
   virtual Range getSums();
   
-  virtual size_t size() {return 0;}
+  virtual size_t size() {return _sums.size();}
 
  private:
   

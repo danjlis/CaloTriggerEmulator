@@ -21,6 +21,7 @@ LL1Outv1::~LL1Outv1()
 void LL1Outv1::Init()
 {
   _trigger_type = "NONE";
+
 }
 
 

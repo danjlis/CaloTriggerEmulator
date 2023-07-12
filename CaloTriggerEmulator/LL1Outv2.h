@@ -14,7 +14,7 @@
 
 using namespace std;
 ///
-class LL1Outv2 : public LL1Out
+class LL1Outv2 : public LL1Outv1
 {
  public:
   
@@ -41,12 +41,13 @@ class LL1Outv2 : public LL1Out
 
   // Set Trigger Type  
   virtual void setLL1Type(std::string &ll1type) { _ll1_type = ll1type;}
-  virtual void setTriggerType(std::string &triggertype) { _ll1_type = triggertype;}
+  virtual void setTriggerType(std::string &triggertype) { _trigger_type = triggertype;}
 
   virtual TriggerDefs::TriggerKey getTriggerKey() const {return _trigger_key;}
   virtual void setTriggerKey(TriggerDefs::TriggerKey key) {_trigger_key = key;}
 
   virtual TriggerPrimitiveContainerv1* GetTriggerPrimitiveContainer() {return _trigger_primitives;}
+  virtual std::vector<unsigned int>* GetTriggerBits() {return _trigger_bits;}
   
  protected:
 
@@ -61,7 +62,7 @@ class LL1Outv2 : public LL1Out
 
   int idx;
 
-  vector<unsigned int> _trigger_bits;
+  vector<unsigned int> *_trigger_bits;
   vector<vector<unsigned int>> _trigger_words;
   TriggerPrimitiveContainerv1 *_trigger_primitives;
   unsigned int _thresholds[10];

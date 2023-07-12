@@ -17,7 +17,7 @@ R__LOAD_LIBRARY(libcalotriggeremulator.so)
 R__LOAD_LIBRARY(libcalopacketgetter.so)
 #endif
 
-  void Fun4All_CaloTrigEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/raw/beam_Hcal-00020096-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
+  void Fun4All_CosmicTriggerEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/commisioning_plots/cosmics_HCAL-00020729-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
 {
   gSystem->Load("libg4dst");
   gSystem->Load("libcalowaveformsim");
@@ -35,7 +35,7 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
   se->registerSubsystem(ca1);
   
   CaloTriggerEmulator *te = new CaloTriggerEmulator("CALOTRIGGEREMULATOR_COSMIC",outfile2);
-  te->Verbosity(2);
+  te->Verbosity(0);
   te->setTriggerType("COSMIC");
   se->registerSubsystem(te);
   
@@ -45,6 +45,6 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
 
 // Fun4All
 
-  se->run(3);
+  se->run(10000);
   se->End();
 }
