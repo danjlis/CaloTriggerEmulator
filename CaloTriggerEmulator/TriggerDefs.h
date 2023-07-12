@@ -34,7 +34,8 @@ namespace TriggerDefs
     mbdDId = 1,
     hcalinDId = 2,
     hcaloutDId = 3,
-    cemcDId = 4,
+    hcalDId = 4,
+    cemcDId = 5,
   };
 
   enum PrimitiveId

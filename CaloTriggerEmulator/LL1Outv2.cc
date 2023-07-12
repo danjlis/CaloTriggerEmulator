@@ -35,6 +35,8 @@ LL1Outv2::LL1Outv2(std::string triggertype, std::string ll1type)
 LL1Outv2::~LL1Outv2()
 {
   Reset();
+  delete _trigger_primitives;
+  delete _trigger_bits;
 }
 
 //______________________________________
@@ -50,8 +52,25 @@ void LL1Outv2::Init()
 void LL1Outv2::Reset()
 {
   _trigger_bits->clear();
-  _trigger_words.clear();
   _trigger_primitives->Reset();
+
+  while (_trigger_words.begin() != _trigger_words.end())
+    {
+      delete _trigger_words.begin()->second;
+      _trigger_words.erase(_trigger_words.begin());
+    } 
+  
+
+}
+
+LL1Outv2::ConstRange LL1Outv2::getTriggerWords() const
+{
+  return make_pair(_trigger_words.begin(), _trigger_words.end());
+}  
+
+LL1Outv2::Range LL1Outv2::getTriggerWords()
+{
+  return make_pair(_trigger_words.begin(), _trigger_words.end());
 }
 
 //______________________________________
@@ -62,7 +81,14 @@ void LL1Outv2::identify(std::ostream& out) const
   out << __FILE__ << __FUNCTION__ <<" Trigger bits    "<<_trigger_bits->size()<<"         : ";
   for (int i = 0; i < static_cast<int>(_trigger_bits->size()) ; i++) cout <<" "<< _trigger_bits->at(i);
   out << " " <<std::endl;
-  out << __FILE__ << __FUNCTION__ <<" Size of trigger words      : "<< _trigger_words.size() << std::endl;;
+  out << __FILE__ << __FUNCTION__ <<" Trigger words    "<<std::endl;
+  
+  for (auto i = _trigger_words.begin(); i != _trigger_words.end() ; ++i) 
+    {
+      for (auto j = (*i).second->begin(); j != (*i).second->end(); ++j)cout <<" "<< (*j);
+      
+      out << " " <<std::endl;
+    }
   out << __FILE__ << __FUNCTION__ <<" Trigger Primitive Container: "<< _trigger_primitives->size() << std::endl;
   if (_trigger_primitives->size()) _trigger_primitives->identify();
 

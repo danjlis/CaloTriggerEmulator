@@ -83,6 +83,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = testexternals_calotriggeremulator$(EXEEXT) \
 	testexternals_calopacketgetter$(EXEEXT) \
+	testexternals_ll1packetgetter$(EXEEXT) \
 	testexternals_mbdtriggeremulator$(EXEEXT) \
 	testexternals_mbdpmtbuilder$(EXEEXT) \
 	testexternals_ll1out$(EXEEXT)
@@ -149,6 +150,9 @@ am_libll1out_la_OBJECTS = $(am__objects_1) LL1Out.lo LL1Outv1.lo \
 	LL1Outv2.lo TriggerDefs.lo TriggerPrimitive.lo \
 	TriggerPrimitiveContainer.lo TriggerPrimitiveContainerv1.lo
 libll1out_la_OBJECTS = $(am_libll1out_la_OBJECTS)
+libll1packetgetter_la_DEPENDENCIES = libll1out.la
+am_libll1packetgetter_la_OBJECTS = LL1PacketGetter.lo
+libll1packetgetter_la_OBJECTS = $(am_libll1packetgetter_la_OBJECTS)
 libmbdpmtbuilder_la_DEPENDENCIES = libll1out.la
 am_libmbdpmtbuilder_la_OBJECTS = MBDPmtBuilder.lo
 libmbdpmtbuilder_la_OBJECTS = $(am_libmbdpmtbuilder_la_OBJECTS)
@@ -170,6 +174,10 @@ testexternals_calotriggeremulator_DEPENDENCIES =  \
 am_testexternals_ll1out_OBJECTS = testexternals.$(OBJEXT)
 testexternals_ll1out_OBJECTS = $(am_testexternals_ll1out_OBJECTS)
 testexternals_ll1out_DEPENDENCIES = libll1out.la
+am_testexternals_ll1packetgetter_OBJECTS = testexternals.$(OBJEXT)
+testexternals_ll1packetgetter_OBJECTS =  \
+	$(am_testexternals_ll1packetgetter_OBJECTS)
+testexternals_ll1packetgetter_DEPENDENCIES = libll1packetgetter.la
 am_testexternals_mbdpmtbuilder_OBJECTS = testexternals.$(OBJEXT)
 testexternals_mbdpmtbuilder_OBJECTS =  \
 	$(am_testexternals_mbdpmtbuilder_OBJECTS)
@@ -215,20 +223,24 @@ am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(libcalopacketgetter_la_SOURCES) \
 	$(libcalotriggeremulator_la_SOURCES) $(libll1out_la_SOURCES) \
+	$(libll1packetgetter_la_SOURCES) \
 	$(libmbdpmtbuilder_la_SOURCES) \
 	$(libmbdtriggeremulator_la_SOURCES) \
 	$(testexternals_calopacketgetter_SOURCES) \
 	$(testexternals_calotriggeremulator_SOURCES) \
 	$(testexternals_ll1out_SOURCES) \
+	$(testexternals_ll1packetgetter_SOURCES) \
 	$(testexternals_mbdpmtbuilder_SOURCES) \
 	$(testexternals_mbdtriggeremulator_SOURCES)
 DIST_SOURCES = $(libcalopacketgetter_la_SOURCES) \
 	$(libcalotriggeremulator_la_SOURCES) $(libll1out_la_SOURCES) \
+	$(libll1packetgetter_la_SOURCES) \
 	$(libmbdpmtbuilder_la_SOURCES) \
 	$(libmbdtriggeremulator_la_SOURCES) \
 	$(testexternals_calopacketgetter_SOURCES) \
 	$(testexternals_calotriggeremulator_SOURCES) \
 	$(testexternals_ll1out_SOURCES) \
+	$(testexternals_ll1packetgetter_SOURCES) \
 	$(testexternals_mbdpmtbuilder_SOURCES) \
 	$(testexternals_mbdtriggeremulator_SOURCES)
 am__can_run_installinfo = \
@@ -407,7 +419,8 @@ lib_LTLIBRARIES = \
 	libmbdtriggeremulator.la \
 	libmbdpmtbuilder.la \
 	libcalotriggeremulator.la \
-	libcalopacketgetter.la
+	libcalopacketgetter.la \
+	libll1packetgetter.la
 
 AM_LDFLAGS = -L$(libdir) -L$(OFFLINE_MAIN)/lib
 libll1out_la_LIBADD = \
@@ -445,6 +458,13 @@ libcalopacketgetter_la_LIBADD = \
 	-lonnxruntime \
 	-lcalowaveformsim
 
+libll1packetgetter_la_LIBADD = \
+	-lphool \
+	-lfun4all \
+	-lg4detectors \
+	-lonnxruntime \
+	libll1out.la
+
 pkginclude_HEADERS = \
 	LL1Defs.h \
 	LL1Out.h \
@@ -454,6 +474,7 @@ pkginclude_HEADERS = \
 	CaloTriggerEmulator.h \
 	MBDPmtBuilder.h \
 	CaloPacketGetter.h \
+	LL1PacketGetter.h \
 	TriggerDefs.h \
 	TriggerPrimitive.h \
 	TriggerPrimitiveContainer.h \
@@ -498,6 +519,9 @@ libmbdpmtbuilder_la_SOURCES = \
 libcalopacketgetter_la_SOURCES = \
 	CaloPacketGetter.cc
 
+libll1packetgetter_la_SOURCES = \
+	LL1PacketGetter.cc
+
 BUILT_SOURCES = testexternals.C
 testexternals_calotriggeremulator_SOURCES = testexternals.C
 testexternals_calotriggeremulator_LDADD = libcalotriggeremulator.la
@@ -509,6 +533,8 @@ testexternals_mbdpmtbuilder_SOURCES = testexternals.C
 testexternals_mbdpmtbuilder_LDADD = libmbdpmtbuilder.la
 testexternals_ll1out_SOURCES = testexternals.C
 testexternals_ll1out_LDADD = libll1out.la
+testexternals_ll1packetgetter_SOURCES = testexternals.C
+testexternals_ll1packetgetter_LDADD = libll1packetgetter.la
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -593,6 +619,9 @@ libcalotriggeremulator.la: $(libcalotriggeremulator_la_OBJECTS) $(libcalotrigger
 libll1out.la: $(libll1out_la_OBJECTS) $(libll1out_la_DEPENDENCIES) $(EXTRA_libll1out_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libll1out_la_OBJECTS) $(libll1out_la_LIBADD) $(LIBS)
 
+libll1packetgetter.la: $(libll1packetgetter_la_OBJECTS) $(libll1packetgetter_la_DEPENDENCIES) $(EXTRA_libll1packetgetter_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libll1packetgetter_la_OBJECTS) $(libll1packetgetter_la_LIBADD) $(LIBS)
+
 libmbdpmtbuilder.la: $(libmbdpmtbuilder_la_OBJECTS) $(libmbdpmtbuilder_la_DEPENDENCIES) $(EXTRA_libmbdpmtbuilder_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libmbdpmtbuilder_la_OBJECTS) $(libmbdpmtbuilder_la_LIBADD) $(LIBS)
 
@@ -620,6 +649,10 @@ testexternals_ll1out$(EXEEXT): $(testexternals_ll1out_OBJECTS) $(testexternals_l
 	@rm -f testexternals_ll1out$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_ll1out_OBJECTS) $(testexternals_ll1out_LDADD) $(LIBS)
 
+testexternals_ll1packetgetter$(EXEEXT): $(testexternals_ll1packetgetter_OBJECTS) $(testexternals_ll1packetgetter_DEPENDENCIES) $(EXTRA_testexternals_ll1packetgetter_DEPENDENCIES) 
+	@rm -f testexternals_ll1packetgetter$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_ll1packetgetter_OBJECTS) $(testexternals_ll1packetgetter_LDADD) $(LIBS)
+
 testexternals_mbdpmtbuilder$(EXEEXT): $(testexternals_mbdpmtbuilder_OBJECTS) $(testexternals_mbdpmtbuilder_DEPENDENCIES) $(EXTRA_testexternals_mbdpmtbuilder_DEPENDENCIES) 
 	@rm -f testexternals_mbdpmtbuilder$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_mbdpmtbuilder_OBJECTS) $(testexternals_mbdpmtbuilder_LDADD) $(LIBS)
@@ -642,6 +675,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv1_Dict.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv2_Dict.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1PacketGetter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MBDPmtBuilder.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MBDTriggerEmulator.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TriggerDefs.Plo@am__quote@

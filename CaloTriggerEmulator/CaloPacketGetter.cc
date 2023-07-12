@@ -29,6 +29,7 @@ CaloPacketGetter::CaloPacketGetter(const std::string &name, const std::string &d
   , m_isdata(true)
 {
   m_detectors["CEMC"] = DetectorSystem::CEMC;
+  m_detectors["MBD"] = DetectorSystem::MBD;
   m_detectors["HCALIN"] = DetectorSystem::HCALIN;
   m_detectors["HCALOUT"] = DetectorSystem::HCALOUT;
   m_detectors["SEPD"] = DetectorSystem::SEPD;
@@ -74,6 +75,14 @@ int CaloPacketGetter::InitRun(PHCompositeNode *topNode)
       m_packet_low = 9001;
       m_packet_high = 9006;
       m_nchannels = 256;
+
+      break;
+
+    case DetectorSystem::MBD:
+      std::cout <<"MBD Packet Getter"<<std::endl;
+      m_packet_low = 1001;
+      m_packet_high = 1002;
+      m_nchannels = 128;
 
       break;
 
@@ -134,6 +143,18 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	}
       break;
     }
+  case DetectorSystem::MBD:
+    {
+      
+      m_WaveformContainer = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_MBD");
+      if (!m_WaveformContainer)
+	{
+	  std::cout << "MBD Waveforms not found - Fatal Error" << std::endl;
+	  exit(1);
+	}
+      break;
+    }
+
   }
   unsigned int key;
   std::vector<unsigned int> keys;
@@ -334,5 +355,26 @@ void CaloPacketGetter::CreateNodeTree(PHCompositeNode *topNode)
 	
 	break;
       }
+    case DetectorSystem::MBD:
+      {
+	PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "MBD"));
+	if (!detNode)
+	  {
+	    std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
+	    detNode = new PHCompositeNode("MBD");
+	    dst_node->addNode(detNode);
+	  }
+	
+	WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_MBD");
+	if (!waveforms)
+	  {
+	    waveforms = new WaveformContainerv1();
+	    PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_MBD", "PHObject");
+	    detNode->addNode(waveformcontainerNode);
+	  }
+	
+	break;
+      }
+
     }
 }

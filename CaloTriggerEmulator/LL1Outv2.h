@@ -17,7 +17,12 @@ using namespace std;
 class LL1Outv2 : public LL1Outv1
 {
  public:
-  
+  typedef std::map<unsigned int, std::vector<unsigned int>*> Map;
+  typedef Map::const_iterator ConstIter;
+  typedef Map::iterator Iter;
+  typedef std::pair<Iter, Iter> Range;
+  typedef std::pair<ConstIter, ConstIter> ConstRange;
+
   ///
   LL1Outv2();
 
@@ -48,7 +53,12 @@ class LL1Outv2 : public LL1Outv1
 
   virtual TriggerPrimitiveContainerv1* GetTriggerPrimitiveContainer() {return _trigger_primitives;}
   virtual std::vector<unsigned int>* GetTriggerBits() {return _trigger_bits;}
-  
+
+  virtual void add_word(int key, std::vector<unsigned int>* trigger_words) { _trigger_words[key] = trigger_words;}
+
+  ConstRange getTriggerWords() const;  
+  Range getTriggerWords();
+
  protected:
 
   virtual void Init() override;
@@ -63,7 +73,7 @@ class LL1Outv2 : public LL1Outv1
   int idx;
 
   vector<unsigned int> *_trigger_bits;
-  vector<vector<unsigned int>> _trigger_words;
+  Map _trigger_words;
   TriggerPrimitiveContainerv1 *_trigger_primitives;
   unsigned int _thresholds[10];
 

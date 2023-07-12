@@ -28,7 +28,8 @@ class CaloPacketGetter : public SubsysReco
     CEMC = 0,
     HCALIN = 1,
     HCALOUT = 2,
-    SEPD = 3
+    SEPD = 3,
+    MBD = 4
   };
 
   int m_detector_type;

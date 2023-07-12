@@ -10,7 +10,8 @@ lib_LTLIBRARIES = \
 	libmbdtriggeremulator.la \
 	libmbdpmtbuilder.la \
 	libcalotriggeremulator.la \
-	libcalopacketgetter.la
+	libcalopacketgetter.la \
+	libll1packetgetter.la
 
 AM_LDFLAGS = -L$(libdir) -L$(OFFLINE_MAIN)/lib
 
@@ -49,6 +50,13 @@ libcalopacketgetter_la_LIBADD = \
 	-lonnxruntime \
 	-lcalowaveformsim
 
+libll1packetgetter_la_LIBADD = \
+	-lphool \
+	-lfun4all \
+	-lg4detectors \
+	-lonnxruntime \
+	libll1out.la
+
 pkginclude_HEADERS = \
 	LL1Defs.h \
 	LL1Out.h \
@@ -58,6 +66,7 @@ pkginclude_HEADERS = \
 	CaloTriggerEmulator.h \
 	MBDPmtBuilder.h \
 	CaloPacketGetter.h \
+	LL1PacketGetter.h \
 	TriggerDefs.h \
 	TriggerPrimitive.h \
 	TriggerPrimitiveContainer.h \
@@ -104,6 +113,9 @@ libmbdpmtbuilder_la_SOURCES = \
 libcalopacketgetter_la_SOURCES = \
 	CaloPacketGetter.cc
 
+libll1packetgetter_la_SOURCES = \
+	LL1PacketGetter.cc
+
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ -c $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 
@@ -116,6 +128,7 @@ libcalopacketgetter_la_SOURCES = \
 noinst_PROGRAMS = \
 	testexternals_calotriggeremulator \
 	testexternals_calopacketgetter \
+	testexternals_ll1packetgetter \
 	testexternals_mbdtriggeremulator \
 	testexternals_mbdpmtbuilder \
 	testexternals_ll1out
@@ -136,6 +149,9 @@ testexternals_mbdpmtbuilder_LDADD = libmbdpmtbuilder.la
 
 testexternals_ll1out_SOURCES = testexternals.C
 testexternals_ll1out_LDADD = libll1out.la
+
+testexternals_ll1packetgetter_SOURCES = testexternals.C
+testexternals_ll1packetgetter_LDADD = libll1packetgetter.la
 
 
 testexternals.C:

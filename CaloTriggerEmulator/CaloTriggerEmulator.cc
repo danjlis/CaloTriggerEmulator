@@ -35,16 +35,22 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _nevent = 0;
   _npassed = 0;
   m_nsamples = 31;
-
+  _idx = 12;
   for (unsigned int i = 0; i < 1024; i++)
     {
       m_l1_adc_table[i] = (i) & 0x3ff;
+      m_l1_adc_table_time[i] = (i) & 0x3ff;
+    }
+  for (unsigned int i = 0; i < 4096; i++)
+    {
+      m_l1_slewing_table[i] = (i) & 0x1ff;
     }
 
   _ll1out = 0;
   _waveforms_cemc = 0;
   _waveforms_hcalin = 0;
   _waveforms_hcalout = 0;
+  _waveforms_mbd = 0;
 
   _primitives = 0;
   _primitives_cemc = 0;
@@ -56,6 +62,13 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _n_sums = 16;
   _m_trig_sub_delay = 6;
   _m_threshold = 10;
+
+  m_nhit1 = 2;
+  m_nhit2 = 10;
+  m_timediff1 = 10;
+  m_timediff2 = 20;
+  m_timediff3 = 30;
+
   _m_det_map[TriggerDefs::TriggerId::noneTId] = {};
   _m_det_map[TriggerDefs::TriggerId::jetTId] = {"CEMC", "HCALOUT", "HCALIN"};
   _m_det_map[TriggerDefs::TriggerId::mbdTId] = {"MBD"};
@@ -71,7 +84,7 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _do_cemc = false;
   _do_hcalin = false;
   _do_hcalout = false;
-
+  _do_mbd = false;
   _masks_channel = {69337149, 70385703};
   _masks_fiber = {69337136, 70385696};
 }
@@ -106,14 +119,17 @@ void CaloTriggerEmulator::setTriggerType(const std::string &name)
 }
 int CaloTriggerEmulator::Init(PHCompositeNode* topNode)
 {
+  hm = new Fun4AllHistoManager(Name());
+  outfile = new TFile(outfilename.c_str(), "RECREATE");
+
+  if (_verbose) std::cout << __FUNCTION__ << std::endl;
+
   return 0;
 }
 
 int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
 {
   if (_verbose) std::cout << __FUNCTION__ << std::endl;
-
-
 
   // Get number of primitives to construct;
 
@@ -123,6 +139,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
       _do_cemc = true;
       _do_hcalin = true;
       _do_hcalout = true;
+      _do_mbd = false;
     }
   else if (_triggerid == TriggerDefs::TriggerId::mbdTId)
     {
@@ -130,6 +147,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
       _do_cemc = false;
       _do_hcalin = false;
       _do_hcalout = false;      
+      _do_mbd = true;
     }
   else if (_triggerid == TriggerDefs::TriggerId::cosmicTId)
     {
@@ -137,6 +155,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
       _do_cemc = false;
       _do_hcalin = true;
       _do_hcalout = true;
+      _do_mbd = false;
     }
   else if (_triggerid == TriggerDefs::TriggerId::pairTId)
     {
@@ -144,6 +163,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
       _do_cemc = true;
       _do_hcalin = false;
       _do_hcalout = false;
+      _do_mbd = false;
     }
   else
     {
@@ -156,18 +176,39 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
 
   // Files build
 
-  hm = new Fun4AllHistoManager(Name());
-  outfile = new TFile(outfilename.c_str(), "RECREATE");
-
-  if (_verbose) std::cout << __FUNCTION__ << std::endl;
-
-
-  _tree = new TTree("ttree"," a persevering date tree");
 
   for ( auto iter = _m_det_map[_triggerid].begin() ; iter != _m_det_map[_triggerid].end() ; ++iter)
     { 
       for (int i = 0; i < _m_prim_map[TriggerDefs::GetDetectorId(*iter)]; i++)
 	{
+	  if (strcmp((*iter).c_str(), "MBD") == 0)
+	    {
+
+	      h_nhit = new TH1D(Form("h_nhit_%d",i),"", 33, -0.5, 32.5);
+	      h2_line_up = new TH2D(Form("h_line_up_%d",i),"", m_nsamples, -0.5, static_cast<float>(m_nsamples) - 0.5, 60, -0.5, 59.5);
+
+	      hm->registerHisto(h_nhit);
+	      hm->registerHisto(h2_line_up);
+
+	      v_nhit.push_back(h_nhit);
+	      v_line_up.push_back(h2_line_up);
+	      for (int j = 0; j < 8; j++)
+		{
+
+		  h_mbd_charge = new TH1D(Form("h_mbd_charge_%d_%d", j, i), "", 257, 0, 257);
+		  v_mbd_charge[Form("h_mbd_charge_%d_%d", j, i)] = h_mbd_charge;
+		  hm->registerHisto(h_mbd_charge);
+		}	      
+	      for (int j = 0; j < 4; j++)
+		{
+		  h_mbd_time = new TH1D(Form("h_mbd_time_%d_%d", j, i), "", 256, 0, 4096);
+		  v_mbd_time[Form("h_mbd_time_%d_%d", j, i)] = h_mbd_time;
+		  hm->registerHisto(h_mbd_time);
+		}
+
+	      continue;
+	    }
+
 	  peak_primitive = new TH2D(Form("peak_primitive_%s_%d", (*iter).c_str(), i), ";primitive;peak;counts", 16, -0.5, 15.5, m_nsamples - _m_trig_sub_delay, -0.5, m_nsamples - 1 - _m_trig_sub_delay);
 	  avg_primitive = new TProfile(Form("avg_primitive_%s_%d",(*iter).c_str(),  i), ";primitive;avg", 16, -0.5, 15.5);
 	  primitives = new TH2D(Form("primitives_%s_%d",(*iter).c_str(),  i), ";primitives;", 16, -0.5, 15.5, 64, 0, 256);
@@ -231,13 +272,14 @@ void CaloTriggerEmulator::reset_vars()
   _waveforms_cemc->Reset();
   _waveforms_hcalin->Reset();
   _waveforms_hcalout->Reset();
+  _waveforms_mbd->Reset();
 
   _primitives_cemc->Reset();
   _primitives_hcalin->Reset();
   _primitives_hcalout->Reset();
+  _primitives->Reset();
 
   _primitive->Reset();
-
 
   while (m_peak_sub_ped_cemc.begin() != m_peak_sub_ped_cemc.end())
     {
@@ -255,6 +297,26 @@ void CaloTriggerEmulator::reset_vars()
     {
       delete m_peak_sub_ped_hcalout.begin()->second;
       m_peak_sub_ped_hcalout.erase(m_peak_sub_ped_hcalout.begin());
+    }
+
+  while (m_peak_sub_ped_mbd.begin() != m_peak_sub_ped_mbd.end())
+    {
+      delete m_peak_sub_ped_mbd.begin()->second;
+      m_peak_sub_ped_mbd.erase(m_peak_sub_ped_mbd.begin());
+    }
+
+  if (!_do_mbd) return;
+
+  while (_sum_mbd.begin() != _sum_mbd.end())
+    {
+      delete *(_sum_mbd.begin());
+      _sum_mbd.erase(_sum_mbd.begin());
+    }
+
+  while (_word_mbd.begin() != _word_mbd.end())
+    {
+      delete *(_word_mbd.begin());
+      _word_mbd.erase(_word_mbd.begin());
     }
 
 }
@@ -347,6 +409,44 @@ int CaloTriggerEmulator::process_waveforms()
 	}
       if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
       if (!ij) return Fun4AllReturnCodes::ABORTEVENT;      
+    }
+  if (_do_mbd)
+    {  
+      WaveformContainerv1::Range begin_end = _waveforms_mbd->getWaveforms();
+      WaveformContainerv1::Iter iwave = begin_end.first;
+
+      int peak_sub_ped;
+      int peak_id = -1;
+      float peak_height = 0;
+      std::vector<int> *v_peak_sub_ped;
+      std::vector<int> wave;
+      int ij = 0;
+      for (; iwave != begin_end.second; ++iwave)
+	{	  
+	  wave = *(iwave->second);
+	  v_peak_sub_ped = new std::vector<int>();
+	  peak_sub_ped = 0;
+	  
+	  for (int i = 0; i < m_nsamples - _m_trig_sub_delay;i++)
+	    {
+	      if (wave.at(i) > peak_height)
+		{
+		  peak_height = wave.at(i);
+		  peak_id = i;
+		}
+	      peak_sub_ped = static_cast<int>(wave.at(_m_trig_sub_delay + i)) - static_cast<int>(wave.at(i));
+	      if (peak_sub_ped < 0) peak_sub_ped = 0;
+	      v_peak_sub_ped->push_back(peak_sub_ped);
+	    }
+	  m_peak_sub_ped_mbd[ij] = v_peak_sub_ped;
+
+	  v_line_up.at(ij/64)->Fill(peak_id, ij%64, 1);
+	  ij++;
+
+	}
+
+      if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
+      if (!ij) return Fun4AllReturnCodes::ABORTEVENT;
     }
 
   return Fun4AllReturnCodes::EVENT_OK;
@@ -478,6 +578,7 @@ int CaloTriggerEmulator::process_primitives()
       if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering HCALIN primitives."<<std::endl;
       ip = 0;
       _n_primitives = _m_prim_map[TriggerDefs::DetectorId::hcalinDId];
+
       for (i = 0; i < _n_primitives; i++, ip++)
 	{
 	  unsigned int tmp;  
@@ -527,6 +628,109 @@ int CaloTriggerEmulator::process_primitives()
 	  
 	}  
     }
+  if (_do_mbd)
+    {
+      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering MBD primitives."<<std::endl;
+
+      ip = 0;
+      _n_primitives = _m_prim_map[TriggerDefs::DetectorId::mbdDId];
+
+      for (i = 0; i < _n_primitives; i++, ip++)
+	{
+
+	  TriggerDefs::TriggerPrimKey primkey = TriggerDefs::getTriggerPrimKey(TriggerDefs::GetTriggerId(_trigger), TriggerDefs::GetDetectorId("MBD"), TriggerDefs::GetPrimitiveId("MBD"), ip);
+	  _primitive = new TriggerPrimitive(primkey);
+	  mask = CheckFiberMasks(primkey);
+	  std::vector<unsigned int> *sum_mbd = nullptr;;
+
+	  _sum_mbd.clear();
+	  for (int j = 0 ; j < 13; j++)
+	    {
+	      sum_mbd = new std::vector<unsigned int>();
+	      _sum_mbd.push_back(sum_mbd);
+	    }
+	      
+	  for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++) 
+	    {
+
+	      for (int j = 0; j < 8; j++)
+		{
+		  m_trig_charge[j] = 0;
+		}
+	      m_trig_nhit = 0;
+	      for (int j = 0; j < 4; j++)
+		{
+		  m_trig_time[j] = 0;
+		}
+
+	      unsigned int tmp, tmp2;  
+	      unsigned int qadd[32];
+	      for (int isec = 0; isec < 4; isec++)
+		{
+		  for (j = 0; j < 8;j++)
+		    {
+		      tmp = m_l1_adc_table[m_peak_sub_ped_mbd[ i*64 + 8 + isec*16 + j ]->at(is) >> 4];
+	
+		      qadd[isec*8+j] = (tmp & 0x380) >> 7;
+		      
+		      m_trig_charge[isec*2 + j/4] += tmp & 0x7ff;
+		      
+		    }
+		}
+	      for (int isec = 0; isec < 4; isec++)
+		{
+      
+		  for (j = 0; j < 8;j++)
+		    {
+		      tmp = m_l1_adc_table[m_peak_sub_ped_mbd[ i*64 + isec*16 + j ]->at(is) >> 4];
+		      
+		      m_trig_nhit += (tmp & 0x200) >> 9;
+		      
+		      tmp2 = m_l1_slewing_table[(qadd[isec*8+j] << 9) + (tmp & 0x01ff)];
+		      
+		      m_trig_time[isec] += tmp2;
+		      
+		    }
+		}
+	      for (int j = 0; j < 8; j++)
+		{
+		  _sum_mbd[j]->push_back(m_trig_charge[j]);
+		}
+	      _sum_mbd[8]->push_back(m_trig_nhit);
+
+	      for (int j = 0; j < 4; j++)
+		{
+		  _sum_mbd[9+j]->push_back(m_trig_time[j]);
+		}
+
+	      if (is == _idx)
+		{
+
+		  for (int j = 0; j < 8; j++)
+		    {
+		      v_mbd_charge[Form("h_mbd_charge_%d_%d", j, ip)]->Fill(m_trig_charge[j]);
+		    }
+
+		  v_nhit[ip]->Fill(m_trig_nhit);
+		  		  
+		  for (int j = 0; j < 4; j++)
+		    {
+		      v_mbd_time[Form("h_mbd_time_%d_%d", j, ip)]->Fill(m_trig_time[j]);
+		    }
+		}
+	    }
+	  for (int j = 0; j < 13; j++)
+	    {
+	      TriggerDefs::TriggerSumKey sumkey = TriggerDefs::getTriggerSumKey(TriggerDefs::GetTriggerId(_trigger), TriggerDefs::GetDetectorId("MBD"), TriggerDefs::GetPrimitiveId("MBD"), ip, j);
+	      _primitive->add_sum(sumkey, _sum_mbd[j]);
+	    }
+	  _primitives->add_primitive(primkey, _primitive);
+	}
+
+      if (_verbose) std::cout << "Total primitives in mbd: "<<_primitives->size()<<std::endl; 
+
+    }
+
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -630,6 +834,169 @@ int CaloTriggerEmulator::process_trigger()
       _npassed += pass;
       if (_verbose)std::cout <<" "<<std::endl;
     }
+  else if (_triggerid == TriggerDefs::TriggerId::mbdTId)
+    {
+
+      if (_verbose) 
+	{
+	  std::cout <<__FUNCTION__<<" "<<__LINE__<<" processing MBD trigger , bits before: "<< _bits->size();
+	}
+      if (!_primitives)
+	{
+	  std::cout << "There is no primitive container" << std::endl;
+	  return Fun4AllReturnCodes::ABORTEVENT;
+	}
+
+
+
+
+      TriggerPrimitiveContainerv1::Range range;      
+      TriggerPrimitive::Range sumrange;
+      int ip, isum, i, j;
+
+      range = _primitives->getTriggerPrimitives();
+      
+      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" mbd primitives size: "<<_primitives->size()<<std::endl; 
+
+      std::vector<unsigned int> *word_mbd = nullptr;
+
+      _word_mbd.clear();
+      for (int j = 0 ; j < 8; j++)
+	{
+	  word_mbd = new std::vector<unsigned int>();
+	  _word_mbd.push_back(word_mbd);
+	}
+
+
+      for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++)
+	{
+	  ip = 0;
+	  for (TriggerPrimitiveContainerv1::Iter iter = range.first ; iter != range.second ; ++iter, ip++)
+	    {
+	      _primitive  = (*iter).second;
+	      sumrange = _primitive->getSums(); 
+	      isum = 0;
+	      for (TriggerPrimitive::Iter iter_sum = sumrange.first; iter_sum != sumrange.second; ++iter_sum, isum++)
+		{
+		  if (isum < 8)
+		    {
+		      m2_trig_charge[ip][isum] = ((*iter_sum).second)->at(is);
+		    }
+		  else if (isum == 8)  m2_trig_nhit[ip] = ((*iter_sum).second)->at(is);
+		  else 
+		    {
+		      m2_trig_time[ip][isum - 9] = ((*iter_sum).second)->at(is);
+		    }
+		}
+	    }
+
+	  if (_verbose && is == 11) {
+	    for (int q = 0; q < 8; q++)
+	      {
+
+		std::cout <<"Q"<<std::dec<<q<<": "; 
+		for (int ipp = 0; ipp < 4; ipp++) std::cout << std::hex<<m2_trig_charge[ipp][q]<<" ";
+		std::cout <<" "<<std::endl;
+	      }
+	    std::cout <<"NH: "; 
+	    for (int ipp = 0; ipp < 4; ipp++) std::cout << std::hex<<m2_trig_nhit[ipp]<<" ";
+	    std::cout <<" "<<std::endl;
+
+	    for (int q = 0; q < 4; q++)
+	      {
+
+		std::cout <<"T"<<std::dec<<q<<": "; 
+		for (int ipp = 0; ipp < 4; ipp++) std::cout << std::hex<<m2_trig_time[ipp][q]<<" ";
+		std::cout <<" "<<std::endl;
+	      }
+
+	  }
+
+	  m_out_tsum[0] = 0;
+	  m_out_tsum[1] = 0;
+	  m_out_nhit[0] = 0;
+	  m_out_nhit[1] = 0;
+	  m_out_tavg[0] = 0;
+	  m_out_tavg[1] = 0;
+	  m_out_trem[0] = 0;
+	  m_out_trem[1] = 0;
+	  m_out_vtx_sub = 0;
+	  m_out_vtx_add = 0;
+
+	  for (i = 0; i < 2; i++)
+	    {
+	      for (j = 0 ; j < 4 ; j++)
+		{
+		  m_out_tsum[0] += m2_trig_time[i][j];
+		  m_out_tsum[1] += m2_trig_time[i+2][j];
+		}
+	      m_out_nhit[0] += m2_trig_nhit[i];
+	      m_out_nhit[1] += m2_trig_nhit[i+2];
+	    }
+
+	  if (m_out_nhit[0] != 0) 
+	    {
+	      m_out_tavg[0] = m_out_tsum[0]/m_out_nhit[0];
+	      m_out_trem[0] = m_out_tsum[0]%m_out_nhit[0]; 
+	    }
+	  if (m_out_nhit[1] != 0) 
+	    {
+	      m_out_tavg[1] = m_out_tsum[1]/m_out_nhit[1];
+	      m_out_trem[1] = m_out_tsum[1]%m_out_nhit[1]; 
+	    }
+
+	  unsigned int max = m_out_tavg[0];
+	  unsigned int min = m_out_tavg[1];
+	  if (min > max) 
+	    {
+	      max = m_out_tavg[1];
+	      min = m_out_tavg[0];
+	    }
+      
+	  m_out_vtx_sub = (max - min) & 0x1ff;
+	  m_out_vtx_add = (m_out_tavg[0] + m_out_tavg[1]) & 0x3ff;
+
+	  _word_mbd[0]->push_back(m_out_tavg[0]);
+	  _word_mbd[1]->push_back(m_out_tavg[1]);
+	  _word_mbd[2]->push_back(m_out_nhit[0]);
+	  _word_mbd[3]->push_back(m_out_nhit[1]);
+	  _word_mbd[4]->push_back(m_out_trem[0]);
+	  _word_mbd[5]->push_back(m_out_trem[1]);
+	  _word_mbd[6]->push_back(m_out_vtx_sub);
+	  _word_mbd[7]->push_back(m_out_vtx_add);
+
+	  if (m_out_nhit[0] >= m_nhit1) bits.at(is) ^= 1 << 0;
+	  if (m_out_nhit[1] >= m_nhit1) bits.at(is) ^= 1 << 1;
+	  if (m_out_nhit[0] >= m_nhit2) bits.at(is) ^= 1 << 2;
+	  if (m_out_nhit[1] >= m_nhit2) bits.at(is) ^= 1 << 3;
+      
+	  if (m_out_nhit[0] >= m_nhit1 && m_out_nhit[1] >= m_nhit1 && m_out_vtx_sub <= m_timediff1) bits.at(is) ^= 1 << 4;
+	  if (m_out_nhit[0] >= m_nhit1 && m_out_nhit[1] >= m_nhit1 && m_out_vtx_sub <= m_timediff2) bits.at(is) ^= 1 << 5;
+	  if (m_out_nhit[0] >= m_nhit1 && m_out_nhit[1] >= m_nhit1 && m_out_vtx_sub <= m_timediff3) bits.at(is) ^= 1 << 6;
+	  if (m_out_nhit[0] >= m_nhit2 && m_out_nhit[1] >= m_nhit2 && m_out_vtx_sub <= m_timediff1) bits.at(is) ^= 1 << 7;
+	  if (m_out_nhit[0] >= m_nhit2 && m_out_nhit[1] >= m_nhit2 && m_out_vtx_sub <= m_timediff2) bits.at(is) ^= 1 << 8;
+	  if (m_out_nhit[0] >= m_nhit2 && m_out_nhit[1] >= m_nhit2 && m_out_vtx_sub <= m_timediff3) bits.at(is) ^= 1 << 9;
+
+	  if (_verbose )   {
+	    std::cout << "Trigger Word : "<<std::bitset<16>(bits.at(is)) << std::dec<<std::endl;  
+	  }
+	}
+
+      _bits->clear();
+      if (_verbose) std::cout << "bits after: ";
+      for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++)
+	{
+	  if (_verbose)std::cout <<" "<<bits.at(is);
+	  _bits->push_back(bits.at(is));
+	}
+      if (_verbose)std::cout <<" "<<std::endl;
+      
+      for (int is = 0; is < 8; is++)
+	{
+	  _ll1out->add_word(is, _word_mbd[is]);
+	}
+    }
+
   else 
     {
       std::cout << "Trigger "<<_trigger<< " not implemented"<<std::endl; 
@@ -709,6 +1076,17 @@ void CaloTriggerEmulator::GetNodes(PHCompositeNode* topNode)
 	}
 
       _primitives_cemc = _ll1out_cemc->GetTriggerPrimitiveContainer();
+    }
+  if (_do_mbd)
+    { 
+      _waveforms_mbd = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_MBD");
+
+      if (!_waveforms_mbd) 
+	{
+	  std::cout << "No HCAL Waveforms found... " << std::endl;
+	  exit(1);
+	}
+
     }
 
   return;

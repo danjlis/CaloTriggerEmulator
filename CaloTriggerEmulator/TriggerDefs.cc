@@ -116,9 +116,8 @@ TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
       break;
 
     case TriggerDefs::DetectorId::hcalinDId :
-      return tmp/3;
-      break;
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp/3;
       break;
     case TriggerDefs::DetectorId::cemcDId :
@@ -145,11 +144,11 @@ TriggerDefs::getPrimitivePhiId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       break;
 
     case TriggerDefs::DetectorId::hcalinDId :
-      return tmp/3;
-      break;
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp/3;
       break;
+
     case TriggerDefs::DetectorId::cemcDId :
       return tmp/12;
       break;
@@ -174,9 +173,8 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
       break;
 
     case TriggerDefs::DetectorId::hcalinDId :
-      return tmp%3;
-      break;
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp%3;
       break;
     case TriggerDefs::DetectorId::cemcDId :
@@ -203,11 +201,11 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       break;
 
     case TriggerDefs::DetectorId::hcalinDId :
-      return tmp%3;
-      break;
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp%3;
       break;
+
     case TriggerDefs::DetectorId::cemcDId :
       return tmp%12;
       break;
@@ -237,10 +235,12 @@ TriggerDefs::getSumPhiId(const TriggerDefs::TriggerSumKey triggersumkey)
       return UINT16_MAX;
       break;
 
-    case TriggerDefs::DetectorId::hcalinDId :
+
       return tmp/4;
       break;
+    case TriggerDefs::DetectorId::hcalinDId :
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp/4;
       break;
     case TriggerDefs::DetectorId::cemcDId :
@@ -266,9 +266,8 @@ TriggerDefs::getSumEtaId(const TriggerDefs::TriggerSumKey triggersumkey)
       break;
 
     case TriggerDefs::DetectorId::hcalinDId :
-      return tmp%4;
-      break;
     case TriggerDefs::DetectorId::hcaloutDId :
+    case TriggerDefs::DetectorId::hcalDId :
       return tmp%4;
       break;
     case TriggerDefs::DetectorId::cemcDId :
@@ -313,6 +312,7 @@ TriggerDefs::PrimitiveId TriggerDefs::GetPrimitiveId(std::string primitive)
     else if (strcmp(primitive.c_str(), "MBD") == 0) return TriggerDefs::PrimitiveId::mbdPId;
     else if (strcmp(primitive.c_str(), "HCALIN") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "HCALOUT") == 0) return TriggerDefs::PrimitiveId::calPId;
+    else if (strcmp(primitive.c_str(), "HCAL") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "CEMC") == 0) return TriggerDefs::PrimitiveId::calPId;
     
     return TriggerDefs::PrimitiveId::nonePId;
