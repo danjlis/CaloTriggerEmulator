@@ -140,12 +140,18 @@ int LL1PacketGetter::process_event(PHCompositeNode *topNode)
     {
       return Fun4AllReturnCodes::DISCARDEVENT;
     }
+    unsigned int clk;
+    unsigned int evt;
     
     for (int pid = m_packet_low; pid <= m_packet_high; pid++)
     {
       Packet *packet = _event->getPacket(pid);
       if (packet)
 	{
+	  evt = packet->iValue(0, "EVTNR");
+	  clk = packet->iValue(0, "CLOCK");
+	  m_ll1out->set_event_number(evt);
+	  m_ll1out->set_clock_number(clk);
 
 	  int nchannels = packet->iValue(0, "CHANNELS");
 	  if (nchannels > m_nchannels) // packet is corrupted and reports too many channels

@@ -142,6 +142,9 @@ libcalotriggeremulator_la_DEPENDENCIES = libll1out.la
 am_libcalotriggeremulator_la_OBJECTS = CaloTriggerEmulator.lo
 libcalotriggeremulator_la_OBJECTS =  \
 	$(am_libcalotriggeremulator_la_OBJECTS)
+libgl1packetgetter_la_DEPENDENCIES =
+am_libgl1packetgetter_la_OBJECTS = GL1PacketGetter.lo
+libgl1packetgetter_la_OBJECTS = $(am_libgl1packetgetter_la_OBJECTS)
 libll1out_la_DEPENDENCIES =
 am__objects_1 = LL1Out_Dict.lo LL1Outv1_Dict.lo LL1Outv2_Dict.lo \
 	TriggerPrimitive_Dict.lo TriggerPrimitiveContainer_Dict.lo \
@@ -222,7 +225,8 @@ am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
 SOURCES = $(libcalopacketgetter_la_SOURCES) \
-	$(libcalotriggeremulator_la_SOURCES) $(libll1out_la_SOURCES) \
+	$(libcalotriggeremulator_la_SOURCES) \
+	$(libgl1packetgetter_la_SOURCES) $(libll1out_la_SOURCES) \
 	$(libll1packetgetter_la_SOURCES) \
 	$(libmbdpmtbuilder_la_SOURCES) \
 	$(libmbdtriggeremulator_la_SOURCES) \
@@ -233,7 +237,8 @@ SOURCES = $(libcalopacketgetter_la_SOURCES) \
 	$(testexternals_mbdpmtbuilder_SOURCES) \
 	$(testexternals_mbdtriggeremulator_SOURCES)
 DIST_SOURCES = $(libcalopacketgetter_la_SOURCES) \
-	$(libcalotriggeremulator_la_SOURCES) $(libll1out_la_SOURCES) \
+	$(libcalotriggeremulator_la_SOURCES) \
+	$(libgl1packetgetter_la_SOURCES) $(libll1out_la_SOURCES) \
 	$(libll1packetgetter_la_SOURCES) \
 	$(libmbdpmtbuilder_la_SOURCES) \
 	$(libmbdtriggeremulator_la_SOURCES) \
@@ -420,7 +425,8 @@ lib_LTLIBRARIES = \
 	libmbdpmtbuilder.la \
 	libcalotriggeremulator.la \
 	libcalopacketgetter.la \
-	libll1packetgetter.la
+	libll1packetgetter.la \
+	libgl1packetgetter.la
 
 AM_LDFLAGS = -L$(libdir) -L$(OFFLINE_MAIN)/lib
 libll1out_la_LIBADD = \
@@ -465,6 +471,10 @@ libll1packetgetter_la_LIBADD = \
 	-lonnxruntime \
 	libll1out.la
 
+libgl1packetgetter_la_LIBADD = \
+	-lphool \
+	-lfun4all
+
 pkginclude_HEADERS = \
 	LL1Defs.h \
 	LL1Out.h \
@@ -475,6 +485,7 @@ pkginclude_HEADERS = \
 	MBDPmtBuilder.h \
 	CaloPacketGetter.h \
 	LL1PacketGetter.h \
+	GL1PacketGetter.h \
 	TriggerDefs.h \
 	TriggerPrimitive.h \
 	TriggerPrimitiveContainer.h \
@@ -522,6 +533,9 @@ libcalopacketgetter_la_SOURCES = \
 libll1packetgetter_la_SOURCES = \
 	LL1PacketGetter.cc
 
+libgl1packetgetter_la_SOURCES = \
+	GL1PacketGetter.cc
+
 BUILT_SOURCES = testexternals.C
 testexternals_calotriggeremulator_SOURCES = testexternals.C
 testexternals_calotriggeremulator_LDADD = libcalotriggeremulator.la
@@ -535,6 +549,8 @@ testexternals_ll1out_SOURCES = testexternals.C
 testexternals_ll1out_LDADD = libll1out.la
 testexternals_ll1packetgetter_SOURCES = testexternals.C
 testexternals_ll1packetgetter_LDADD = libll1packetgetter.la
+testexternals_gl1packetgetter_SOURCES = testexternals.C
+testexternals_gl1packetgetter_LDADD = libgl1packetgetter.la
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -616,6 +632,9 @@ libcalopacketgetter.la: $(libcalopacketgetter_la_OBJECTS) $(libcalopacketgetter_
 libcalotriggeremulator.la: $(libcalotriggeremulator_la_OBJECTS) $(libcalotriggeremulator_la_DEPENDENCIES) $(EXTRA_libcalotriggeremulator_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libcalotriggeremulator_la_OBJECTS) $(libcalotriggeremulator_la_LIBADD) $(LIBS)
 
+libgl1packetgetter.la: $(libgl1packetgetter_la_OBJECTS) $(libgl1packetgetter_la_DEPENDENCIES) $(EXTRA_libgl1packetgetter_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libgl1packetgetter_la_OBJECTS) $(libgl1packetgetter_la_LIBADD) $(LIBS)
+
 libll1out.la: $(libll1out_la_OBJECTS) $(libll1out_la_DEPENDENCIES) $(EXTRA_libll1out_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libll1out_la_OBJECTS) $(libll1out_la_LIBADD) $(LIBS)
 
@@ -669,6 +688,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CaloPacketGetter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CaloTriggerEmulator.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GL1PacketGetter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Out.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Out_Dict.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LL1Outv1.Plo@am__quote@

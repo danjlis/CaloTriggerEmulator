@@ -159,6 +159,13 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
   unsigned int key;
   std::vector<unsigned int> keys;
   std::vector<std::vector<int>> waveforms;
+  unsigned int clk;
+  unsigned int evt;
+  unsigned int nmod;
+  unsigned int femslot[3];
+  unsigned int femclk[3];
+  unsigned int femevt[3];
+
   if (m_isdata)
   {
     Event *_event = findNode::getClass<Event>(topNode, "PRDF");
@@ -176,6 +183,21 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
       Packet *packet = _event->getPacket(pid);
       if (packet)
 	{
+	  clk = packet->iValue(0, "CLOCK");
+	  evt = packet->iValue(0, "EVTNR");
+	  key = pid << 16;
+	  m_WaveformContainer->add_packet_clock(key, clk);
+	  m_WaveformContainer->add_packet_event(key, evt);
+	  nmod = packet->iValue(0, "NRMODULES");
+	  for (unsigned int i = 0; i < nmod;i++)
+	    {
+	      femslot[i] = packet->iValue(i, "FEMSLOT");
+	      femclk[i] = packet->iValue(i, "FEMCLOCK");
+	      femevt[i] = packet->iValue(i, "FEMEVTNR");
+	      key = ((pid & 0xffff) << 16) + (femslot[i] << 8) + i;
+	      m_WaveformContainer->add_fem_clock(key, femclk[i]);
+	      m_WaveformContainer->add_fem_event(key, femevt[i]);
+	    }
 
 	  int nchannels = packet->iValue(0, "CHANNELS");
 	  if (nchannels > m_nchannels) // packet is corrupted and reports too many channels
@@ -193,7 +215,6 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	      waveform.reserve(m_nsamples);
 	      for (int samp = 0; samp < m_nsamples; samp++)
 		{
-
 		  waveform.push_back(packet->iValue(samp, channel));
 		  //  std::cout << " "<< waveform[samp];
 		}

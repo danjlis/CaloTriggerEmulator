@@ -10,6 +10,10 @@ AM_LDFLAGS = \
   -L$(OFFLINE_MAIN)/lib
 
 pkginclude_HEADERS = \
+  MBDEmulatorTreeMaker.h \
+  MBDEmulatorTreeMakerLinkDef.h \
+  HCALEmulatorTreeMaker.h \
+  HCALEmulatorTreeMakerLinkDef.h \
   TrigTreeMaker.h \
   TrigTreeMakerLinkDef.h
 
@@ -20,7 +24,9 @@ nobase_dist_pcm_DATA =
 
 lib_LTLIBRARIES = \
   libtrigtreemaker_io.la \
-  libtrigtreemaker.la
+  libtrigtreemaker.la \
+  libmbdemulatortreemaker.la \
+  libhcalemulatortreemaker.la
 
 libtrigtreemaker_io_la_SOURCES = \
   $(ROOTDICTS) 
@@ -46,6 +52,23 @@ libtrigtreemaker_la_LIBADD = \
   -lcentrality_io \
   -lSubsysReco
 
+
+libmbdemulatortreemaker_la_SOURCES = \
+  MBDEmulatorTreeMaker.cc
+
+libmbdemulatortreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lll1out \
+  -lSubsysReco
+
+libhcalemulatortreemaker_la_SOURCES = \
+  HCALEmulatorTreeMaker.cc
+
+libhcalemulatortreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lll1out \
+  -lSubsysReco
+
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 
@@ -56,13 +79,21 @@ BUILT_SOURCES = testexternals.cc
 
 noinst_PROGRAMS = \
   testexternals_io \
-  testexternals
+  testexternals \
+  testexternals_mbd \
+  testexternals_hcal
 
 testexternals_io_SOURCES = testexternals.cc
 testexternals_io_LDADD   = libtrigtreemaker_io.la
 
 testexternals_SOURCES = testexternals.cc
 testexternals_LDADD   = libtrigtreemaker.la
+
+testexternals_mbd_SOURCES = testexternals.cc
+testexternals_mbd_LDADD   = libmbdemulatortreemaker.la
+
+testexternals_hcal_SOURCES = testexternals.cc
+testexternals_hcal_LDADD   = libhcalemulatortreemaker.la
 
 testexternals.cc:
 	echo "//*** this is a generated file. Do not commit, do not edit" > $@

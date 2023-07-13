@@ -81,7 +81,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = testexternals_io$(EXEEXT) testexternals$(EXEEXT)
+noinst_PROGRAMS = testexternals_io$(EXEEXT) testexternals$(EXEEXT) \
+	testexternals_mbd$(EXEEXT) testexternals_hcal$(EXEEXT)
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) depcomp \
@@ -126,13 +127,21 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pcmdir)" \
 	"$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libtrigtreemaker_la_DEPENDENCIES = libtrigtreemaker_io.la
-am_libtrigtreemaker_la_OBJECTS = TrigTreeMaker.lo
-libtrigtreemaker_la_OBJECTS = $(am_libtrigtreemaker_la_OBJECTS)
+libhcalemulatortreemaker_la_DEPENDENCIES =
+am_libhcalemulatortreemaker_la_OBJECTS = HCALEmulatorTreeMaker.lo
+libhcalemulatortreemaker_la_OBJECTS =  \
+	$(am_libhcalemulatortreemaker_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libmbdemulatortreemaker_la_DEPENDENCIES =
+am_libmbdemulatortreemaker_la_OBJECTS = MBDEmulatorTreeMaker.lo
+libmbdemulatortreemaker_la_OBJECTS =  \
+	$(am_libmbdemulatortreemaker_la_OBJECTS)
+libtrigtreemaker_la_DEPENDENCIES = libtrigtreemaker_io.la
+am_libtrigtreemaker_la_OBJECTS = TrigTreeMaker.lo
+libtrigtreemaker_la_OBJECTS = $(am_libtrigtreemaker_la_OBJECTS)
 libtrigtreemaker_io_la_DEPENDENCIES =
 am__objects_1 =
 am_libtrigtreemaker_io_la_OBJECTS = $(am__objects_1)
@@ -141,9 +150,15 @@ PROGRAMS = $(noinst_PROGRAMS)
 am_testexternals_OBJECTS = testexternals.$(OBJEXT)
 testexternals_OBJECTS = $(am_testexternals_OBJECTS)
 testexternals_DEPENDENCIES = libtrigtreemaker.la
+am_testexternals_hcal_OBJECTS = testexternals.$(OBJEXT)
+testexternals_hcal_OBJECTS = $(am_testexternals_hcal_OBJECTS)
+testexternals_hcal_DEPENDENCIES = libhcalemulatortreemaker.la
 am_testexternals_io_OBJECTS = testexternals.$(OBJEXT)
 testexternals_io_OBJECTS = $(am_testexternals_io_OBJECTS)
 testexternals_io_DEPENDENCIES = libtrigtreemaker_io.la
+am_testexternals_mbd_OBJECTS = testexternals.$(OBJEXT)
+testexternals_mbd_OBJECTS = $(am_testexternals_mbd_OBJECTS)
+testexternals_mbd_DEPENDENCIES = libmbdemulatortreemaker.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -196,12 +211,18 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libtrigtreemaker_la_SOURCES) \
+SOURCES = $(libhcalemulatortreemaker_la_SOURCES) \
+	$(libmbdemulatortreemaker_la_SOURCES) \
+	$(libtrigtreemaker_la_SOURCES) \
 	$(libtrigtreemaker_io_la_SOURCES) $(testexternals_SOURCES) \
-	$(testexternals_io_SOURCES)
-DIST_SOURCES = $(libtrigtreemaker_la_SOURCES) \
+	$(testexternals_hcal_SOURCES) $(testexternals_io_SOURCES) \
+	$(testexternals_mbd_SOURCES)
+DIST_SOURCES = $(libhcalemulatortreemaker_la_SOURCES) \
+	$(libmbdemulatortreemaker_la_SOURCES) \
+	$(libtrigtreemaker_la_SOURCES) \
 	$(libtrigtreemaker_io_la_SOURCES) $(testexternals_SOURCES) \
-	$(testexternals_io_SOURCES)
+	$(testexternals_hcal_SOURCES) $(testexternals_io_SOURCES) \
+	$(testexternals_mbd_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -378,6 +399,10 @@ AM_LDFLAGS = \
   -L$(OFFLINE_MAIN)/lib
 
 pkginclude_HEADERS = \
+  MBDEmulatorTreeMaker.h \
+  MBDEmulatorTreeMakerLinkDef.h \
+  HCALEmulatorTreeMaker.h \
+  HCALEmulatorTreeMakerLinkDef.h \
   TrigTreeMaker.h \
   TrigTreeMakerLinkDef.h
 
@@ -386,7 +411,9 @@ pcmdir = $(libdir)
 nobase_dist_pcm_DATA = 
 lib_LTLIBRARIES = \
   libtrigtreemaker_io.la \
-  libtrigtreemaker.la
+  libtrigtreemaker.la \
+  libmbdemulatortreemaker.la \
+  libhcalemulatortreemaker.la
 
 libtrigtreemaker_io_la_SOURCES = \
   $(ROOTDICTS) 
@@ -412,11 +439,31 @@ libtrigtreemaker_la_LIBADD = \
   -lcentrality_io \
   -lSubsysReco
 
+libmbdemulatortreemaker_la_SOURCES = \
+  MBDEmulatorTreeMaker.cc
+
+libmbdemulatortreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lll1out \
+  -lSubsysReco
+
+libhcalemulatortreemaker_la_SOURCES = \
+  HCALEmulatorTreeMaker.cc
+
+libhcalemulatortreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lll1out \
+  -lSubsysReco
+
 BUILT_SOURCES = testexternals.cc
 testexternals_io_SOURCES = testexternals.cc
 testexternals_io_LDADD = libtrigtreemaker_io.la
 testexternals_SOURCES = testexternals.cc
 testexternals_LDADD = libtrigtreemaker.la
+testexternals_mbd_SOURCES = testexternals.cc
+testexternals_mbd_LDADD = libmbdemulatortreemaker.la
+testexternals_hcal_SOURCES = testexternals.cc
+testexternals_hcal_LDADD = libhcalemulatortreemaker.la
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -492,6 +539,12 @@ clean-libLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
+libhcalemulatortreemaker.la: $(libhcalemulatortreemaker_la_OBJECTS) $(libhcalemulatortreemaker_la_DEPENDENCIES) $(EXTRA_libhcalemulatortreemaker_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libhcalemulatortreemaker_la_OBJECTS) $(libhcalemulatortreemaker_la_LIBADD) $(LIBS)
+
+libmbdemulatortreemaker.la: $(libmbdemulatortreemaker_la_OBJECTS) $(libmbdemulatortreemaker_la_DEPENDENCIES) $(EXTRA_libmbdemulatortreemaker_la_DEPENDENCIES) 
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libmbdemulatortreemaker_la_OBJECTS) $(libmbdemulatortreemaker_la_LIBADD) $(LIBS)
+
 libtrigtreemaker.la: $(libtrigtreemaker_la_OBJECTS) $(libtrigtreemaker_la_DEPENDENCIES) $(EXTRA_libtrigtreemaker_la_DEPENDENCIES) 
 	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libtrigtreemaker_la_OBJECTS) $(libtrigtreemaker_la_LIBADD) $(LIBS)
 
@@ -511,9 +564,17 @@ testexternals$(EXEEXT): $(testexternals_OBJECTS) $(testexternals_DEPENDENCIES) $
 	@rm -f testexternals$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_OBJECTS) $(testexternals_LDADD) $(LIBS)
 
+testexternals_hcal$(EXEEXT): $(testexternals_hcal_OBJECTS) $(testexternals_hcal_DEPENDENCIES) $(EXTRA_testexternals_hcal_DEPENDENCIES) 
+	@rm -f testexternals_hcal$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_hcal_OBJECTS) $(testexternals_hcal_LDADD) $(LIBS)
+
 testexternals_io$(EXEEXT): $(testexternals_io_OBJECTS) $(testexternals_io_DEPENDENCIES) $(EXTRA_testexternals_io_DEPENDENCIES) 
 	@rm -f testexternals_io$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_io_OBJECTS) $(testexternals_io_LDADD) $(LIBS)
+
+testexternals_mbd$(EXEEXT): $(testexternals_mbd_OBJECTS) $(testexternals_mbd_DEPENDENCIES) $(EXTRA_testexternals_mbd_DEPENDENCIES) 
+	@rm -f testexternals_mbd$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(testexternals_mbd_OBJECTS) $(testexternals_mbd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -521,6 +582,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HCALEmulatorTreeMaker.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MBDEmulatorTreeMaker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TrigTreeMaker.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testexternals.Po@am__quote@
 

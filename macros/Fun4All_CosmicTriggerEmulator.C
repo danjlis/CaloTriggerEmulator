@@ -9,12 +9,14 @@
 #include <CaloWaveFormSim.h>
 #include <CaloTriggerEmulator.h>
 #include <CaloPacketGetter.h>
+#include <HCALEmulatorTreeMaker.h>
 
 R__LOAD_LIBRARY(libfun4allraw.so)
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libcalowaveformsim.so)
 R__LOAD_LIBRARY(libcalotriggeremulator.so)
 R__LOAD_LIBRARY(libcalopacketgetter.so)
+R__LOAD_LIBRARY(libhcalemulatortreemaker.so)
 #endif
 
   void Fun4All_CosmicTriggerEmulator(const std::string &fname1 = "/sphenix/user/dlis/Projects/commisioning_plots/cosmics_HCAL-00020729-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
@@ -23,6 +25,7 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
   gSystem->Load("libcalowaveformsim");
   gSystem->Load("libcalotriggeremulator");
   gSystem->Load("libcalopacketgetter");
+  gSystem->Load("libhcalemulatortreemaker");
 
   Fun4AllServer *se = Fun4AllServer::instance();
 
@@ -39,6 +42,9 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
   te->setTriggerType("COSMIC");
   se->registerSubsystem(te);
   
+  HCALEmulatorTreeMaker *tt1 = new HCALEmulatorTreeMaker("HCALEMULATORTREEMAKER","trig_tree_hcal.root", "LL1OUT_COSMIC");
+  se->registerSubsystem(tt1);
+
   Fun4AllInputManager *in = new Fun4AllPrdfInputManager("in");
   in->fileopen(fname1);
   se->registerInputManager(in);

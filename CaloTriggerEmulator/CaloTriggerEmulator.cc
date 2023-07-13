@@ -357,6 +357,13 @@ int CaloTriggerEmulator::process_waveforms()
     {
       WaveformContainerv1::Range begin_end = _waveforms_hcalin->getWaveforms();
       WaveformContainerv1::Iter iwave = begin_end.first;
+
+      WaveformContainerv1::IterInfo iinfo;
+      iinfo = (_waveforms_hcalin->get_fem_clocks()).first;
+      _ll1out_hcalin->set_clock_number((*iinfo).second);
+
+      iinfo = (_waveforms_hcalin->get_fem_events()).first;
+      _ll1out_hcalin->set_event_number((*iinfo).second);
       
       
       int peak_sub_ped;
@@ -386,7 +393,15 @@ int CaloTriggerEmulator::process_waveforms()
     {
       WaveformContainerv1::Range begin_end = _waveforms_hcalout->getWaveforms();
       WaveformContainerv1::Iter iwave = begin_end.first;
-      
+
+
+      WaveformContainerv1::IterInfo iinfo;
+      iinfo = (_waveforms_hcalout->get_fem_clocks()).first;
+      _ll1out_hcalout->set_clock_number((*iinfo).second);
+
+      iinfo = (_waveforms_hcalout->get_fem_events()).first;
+      _ll1out_hcalout->set_event_number((*iinfo).second);
+            
       
       int peak_sub_ped;
       std::vector<int> *v_peak_sub_ped;
@@ -414,6 +429,13 @@ int CaloTriggerEmulator::process_waveforms()
     {  
       WaveformContainerv1::Range begin_end = _waveforms_mbd->getWaveforms();
       WaveformContainerv1::Iter iwave = begin_end.first;
+
+      WaveformContainerv1::IterInfo iinfo;
+      iinfo = (_waveforms_mbd->get_fem_clocks()).first;
+      _ll1out->set_clock_number((*iinfo).second);
+
+      iinfo = (_waveforms_mbd->get_fem_events()).first;
+      _ll1out->set_event_number((*iinfo).second);
 
       int peak_sub_ped;
       int peak_id = -1;
@@ -638,10 +660,10 @@ int CaloTriggerEmulator::process_primitives()
       for (i = 0; i < _n_primitives; i++, ip++)
 	{
 
-	  TriggerDefs::TriggerPrimKey primkey = TriggerDefs::getTriggerPrimKey(TriggerDefs::GetTriggerId(_trigger), TriggerDefs::GetDetectorId("MBD"), TriggerDefs::GetPrimitiveId("MBD"), ip);
+	  TriggerDefs::TriggerPrimKey primkey = TriggerDefs::getTriggerPrimKey(TriggerDefs::GetTriggerId(_trigger), TriggerDefs::GetDetectorId("MBD"), TriggerDefs::GetPrimitiveId("MBD"), _n_primitives - ip);
 	  _primitive = new TriggerPrimitive(primkey);
 	  mask = CheckFiberMasks(primkey);
-	  std::vector<unsigned int> *sum_mbd = nullptr;;
+	  std::vector<unsigned int> *sum_mbd = nullptr;
 
 	  _sum_mbd.clear();
 	  for (int j = 0 ; j < 13; j++)

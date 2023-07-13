@@ -530,10 +530,10 @@ void TrigTreeMaker::process_truth()
 
   if (_ll1_mbd)
     {
-      m_mbd_trigger_bits = _ll1_mbd->GetTriggerBits();
+      m_mbd_trigger_bits = _ll1_mbd->GetTriggerBits(11);
       for (int i = 0 ; i < 13; i++)
 	{
-	  m_mbd_trigger_words[i] = _ll1_mbd->GetTriggerWord(i);
+	  m_mbd_trigger_words[i] = _ll1_mbd->GetTriggerWord(i,11);
 	}
     }
 

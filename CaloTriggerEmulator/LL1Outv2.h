@@ -55,6 +55,11 @@ class LL1Outv2 : public LL1Outv1
   virtual std::vector<unsigned int>* GetTriggerBits() {return _trigger_bits;}
 
   virtual void add_word(int key, std::vector<unsigned int>* trigger_words) { _trigger_words[key] = trigger_words;}
+  
+  virtual void set_event_number(unsigned int evt){ _event_number = evt;}
+  virtual unsigned int get_event_number(){ return _event_number;}
+  virtual void set_clock_number(unsigned int clk){ _clock_number = clk;}
+  virtual unsigned int get_clock_number(){ return _clock_number;}
 
   ConstRange getTriggerWords() const;  
   Range getTriggerWords();
@@ -71,6 +76,8 @@ class LL1Outv2 : public LL1Outv1
   TriggerDefs::TriggerKey _trigger_key = TriggerDefs::TRIGGERKEYMAX;
 
   int idx;
+  unsigned int _event_number;
+  unsigned int _clock_number;
 
   vector<unsigned int> *_trigger_bits;
   Map _trigger_words;
