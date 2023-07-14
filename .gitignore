@@ -1,5 +1,13 @@
 # Prerequisites
 *.d
+*config.*
+*/missing
+*/autom4te.cache/*
+*/autom4te.cache
+*/depcomp
+*/install-sh
+*/ltmain.sh
+
 
 # Compiled Object files
 *.slo

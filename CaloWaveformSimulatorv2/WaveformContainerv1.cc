@@ -29,6 +29,10 @@ void WaveformContainerv1::Reset()
       _waveforms.erase(_waveforms.begin());
     } 
 
+  _packet_event_number.clear();
+  _packet_event_number.clear();
+  _fem_clock_number.clear();
+  _fem_clock_number.clear();
 }
 
 //______________________________________
