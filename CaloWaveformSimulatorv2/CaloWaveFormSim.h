@@ -5,6 +5,7 @@
 #include <bbc/BbcPmtHit.h>
 #include <fun4all/SubsysReco.h>
 #include <TTree.h>
+#include <TProfile.h>
 #include <TRandom3.h>
 #include <caloreco/CaloWaveformProcessing.h>
 #include <g4detectors/PHG4CylinderGeomContainer.h>
@@ -18,6 +19,7 @@
 // Forward declarations
 class Fun4AllHistoManager;
 class PHCompositeNode;
+class TProfile;
 class TFile;
 class TNtuple;
 class TTree;

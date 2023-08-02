@@ -44,7 +44,6 @@
 #include <bbc/BbcPmtContainerV1.h>
 #include <bbc/BbcPmtHitV1.h>
 
-#include <TProfile.h>
 #include <TFile.h>
 #include <TNtuple.h>
 #include <TMath.h>
@@ -53,6 +52,8 @@
 #include <string>
 #include <TF1.h>
 #include <phool/onnxlib.h>
+
+class TProfile;
 
 TProfile* CaloWaveFormSim::h_template_bbc;
 TProfile* CaloWaveFormSim::h_template_emcal;
