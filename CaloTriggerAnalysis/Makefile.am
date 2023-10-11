@@ -15,7 +15,10 @@ pkginclude_HEADERS = \
   HCALEmulatorTreeMaker.h \
   HCALEmulatorTreeMakerLinkDef.h \
   TrigTreeMaker.h \
-  TrigTreeMakerLinkDef.h
+  TrigTreeMakerLinkDef.h \
+  WaveTreeMaker.h \
+  WaveTreeMakerLinkDef.h
+
 
 ROOTDICTS = 
 
@@ -25,6 +28,7 @@ nobase_dist_pcm_DATA =
 lib_LTLIBRARIES = \
   libtrigtreemaker_io.la \
   libtrigtreemaker.la \
+  libwavetreemaker.la \
   libmbdemulatortreemaker.la \
   libhcalemulatortreemaker.la
 
@@ -50,6 +54,15 @@ libtrigtreemaker_la_LIBADD = \
   -lgslcblas \
   -lphg4hit \
   -lcentrality_io \
+  -lSubsysReco
+
+libwavetreemaker_la_SOURCES = \
+  WaveTreeMaker.cc
+
+libwavetreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lcalo_io \
+  -lffaobjects \
   -lSubsysReco
 
 
@@ -80,6 +93,7 @@ BUILT_SOURCES = testexternals.cc
 noinst_PROGRAMS = \
   testexternals_io \
   testexternals \
+  testexternals_wave \
   testexternals_mbd \
   testexternals_hcal
 
@@ -88,6 +102,9 @@ testexternals_io_LDADD   = libtrigtreemaker_io.la
 
 testexternals_SOURCES = testexternals.cc
 testexternals_LDADD   = libtrigtreemaker.la
+
+testexternals_wave_SOURCES = testexternals.cc
+testexternals_wave_LDADD   = libwavetreemaker.la
 
 testexternals_mbd_SOURCES = testexternals.cc
 testexternals_mbd_LDADD   = libmbdemulatortreemaker.la

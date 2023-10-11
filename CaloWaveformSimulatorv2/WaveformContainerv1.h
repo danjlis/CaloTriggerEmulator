@@ -49,6 +49,7 @@ class WaveformContainerv1 : public WaveformContainer
   virtual void add_packet_clock(unsigned int key, unsigned int clk) { _packet_clock_number[key] = clk;}
   virtual void add_fem_event(unsigned int key, unsigned int evt) { _fem_event_number[key] = evt;}
   virtual void add_fem_clock(unsigned int key, unsigned int clk) { _fem_clock_number[key] = clk;}
+  // To do encode key and decode key
 
   virtual RangeInfo get_packet_events()
   {

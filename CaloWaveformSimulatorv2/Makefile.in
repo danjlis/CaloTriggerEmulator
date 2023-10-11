@@ -124,7 +124,7 @@ am__uninstall_files_from_dir = { \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pcmdir)" \
-	"$(DESTDIR)$(pkgincludedir)"
+	"$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libcalowaveformsim_la_DEPENDENCIES =
 am_libcalowaveformsim_la_OBJECTS = WaveformContainer_Dict.lo \
@@ -183,7 +183,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-DATA = $(nobase_dist_pcm_DATA)
+DATA = $(nobase_dist_pcm_DATA) $(pkgdata_DATA)
 HEADERS = $(pkginclude_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
@@ -376,6 +376,16 @@ pkginclude_HEADERS = \
 	WaveformContainerv1.h \
 	CaloWaveFormSim.h
 
+pkgdata_DATA = \
+	no_raddmgnoise.csv \
+	low_raddmgnoise.csv \
+	medium_raddmgnoise.csv \
+	high_raddmgnoise.csv \
+	testbeam_cemc_template.root \
+	testbeam_ihcal_template.root \
+	testbeam_ohcal_template.root \
+	laser_bbc_template.root 
+
 pcmdir = $(libdir)
 nobase_dist_pcm_DATA = \
 	WaveformContainer_Dict_rdict.pcm \
@@ -567,6 +577,27 @@ uninstall-nobase_dist_pcmDATA:
 	@list='$(nobase_dist_pcm_DATA)'; test -n "$(pcmdir)" || list=; \
 	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
 	dir='$(DESTDIR)$(pcmdir)'; $(am__uninstall_files_from_dir)
+install-pkgdataDATA: $(pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgdatadir)" || exit $$?; \
+	done
+
+uninstall-pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(pkgdatadir)'; $(am__uninstall_files_from_dir)
 install-pkgincludeHEADERS: $(pkginclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
@@ -808,7 +839,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pcmdir)" "$(DESTDIR)$(pkgincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pcmdir)" "$(DESTDIR)$(pkgdatadir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -865,7 +896,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-nobase_dist_pcmDATA install-pkgincludeHEADERS
+install-data-am: install-nobase_dist_pcmDATA install-pkgdataDATA \
+	install-pkgincludeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -914,7 +946,7 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-libLTLIBRARIES uninstall-nobase_dist_pcmDATA \
-	uninstall-pkgincludeHEADERS
+	uninstall-pkgdataDATA uninstall-pkgincludeHEADERS
 
 .MAKE: install-am install-strip
 
@@ -930,13 +962,14 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-nobase_dist_pcmDATA \
 	install-exec install-exec-am install-html install-html-am \
 	install-info install-info-am install-libLTLIBRARIES \
 	install-man install-nobase_dist_pcmDATA install-pdf \
-	install-pdf-am install-pkgincludeHEADERS install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-libLTLIBRARIES \
-	uninstall-nobase_dist_pcmDATA uninstall-pkgincludeHEADERS
+	install-pdf-am install-pkgdataDATA install-pkgincludeHEADERS \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-libLTLIBRARIES \
+	uninstall-nobase_dist_pcmDATA uninstall-pkgdataDATA \
+	uninstall-pkgincludeHEADERS
 
 
 %_Dict.cc: %.h %LinkDef.h

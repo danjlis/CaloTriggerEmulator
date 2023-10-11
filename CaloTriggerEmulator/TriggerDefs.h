@@ -26,6 +26,7 @@ namespace TriggerDefs
     jetTId = 2,
     pairTId = 3,
     cosmicTId = 4,
+    cosmic_coinTId = 5,
   };
 
   enum DetectorId

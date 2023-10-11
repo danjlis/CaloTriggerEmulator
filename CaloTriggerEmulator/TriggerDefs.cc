@@ -288,6 +288,7 @@ TriggerDefs::TriggerId TriggerDefs::GetTriggerId(std::string trigger)
     else if (strcmp(trigger.c_str(), "JET") == 0) return TriggerDefs::TriggerId::jetTId;
     else if (strcmp(trigger.c_str(), "PAIR") == 0) return TriggerDefs::TriggerId::pairTId;
     else if (strcmp(trigger.c_str(), "COSMIC") == 0) return TriggerDefs::TriggerId::cosmicTId;
+    else if (strcmp(trigger.c_str(), "COSMIC_COIN") == 0) return TriggerDefs::TriggerId::cosmic_coinTId;
     
     return TriggerDefs::TriggerId::noneTId;
     

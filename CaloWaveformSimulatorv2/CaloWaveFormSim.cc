@@ -55,11 +55,11 @@
 
 class TProfile;
 
-TProfile* CaloWaveFormSim::h_template_bbc;
-TProfile* CaloWaveFormSim::h_template_emcal;
-TProfile* CaloWaveFormSim::h_template_ihcal;
-TProfile* CaloWaveFormSim::h_template_ohcal;
 
+TProfile *CaloWaveFormSim::h_template_emcal;
+TProfile *CaloWaveFormSim::h_template_ohcal;
+TProfile *CaloWaveFormSim::h_template_ihcal;
+TProfile *CaloWaveFormSim::h_template_bbc;
 
 
 using namespace std;
@@ -82,29 +82,43 @@ CaloWaveFormSim::~CaloWaveFormSim()
 int CaloWaveFormSim::Init(PHCompositeNode*)
 {
   rnd = new TRandom3(0);
-  //----------------------------------------------------------------------------------------------------
-  //Read in the noise file, this currently points to a tim local area file, 
-  //but a copy of this file is in the git repository.
-  //----------------------------------------------------------------------------------------------------
-  switch(_noiselevel)
+
+  const char *noiseenv = getenv("CALOWAVEFORMSIM_NOISE");
+  std::string noisefilename;
+  if (noiseenv == nullptr)
     {
-    case 0 :
-      noise = new TTree("noise_norad", "tree");
-      noise->ReadFile("/gpfs/mnt/gpfs02/sphenix/user/trinn/sPHENIX_emcal_cosmics_sector0/noise_waveforms/no_raddmgnoise.csv", "a1:a2:a3:a4:a5:a6:a7:a8:a9:a10:a11:a12:a13:a14:a15:a16:a17:a18:a19:a20:a21:a22:a23:a24:a25:a26:a27:a28:a29:a30:a31");
-
-    case 1:
-      noise = new TTree("noise_lowrad", "tree");
-      noise->ReadFile("/gpfs/mnt/gpfs02/sphenix/user/trinn/sPHENIX_emcal_cosmics_sector0/noise_waveforms/low_raddmgnoise.csv", "a1:a2:a3:a4:a5:a6:a7:a8:a9:a10:a11:a12:a13:a14:a15:a16:a17:a18:a19:a20:a21:a22:a23:a24:a25:a26:a27:a28:a29:a30:a31");
+      const char *offline_main = getenv("OFFLINE_MAIN");
+      assert(offline_main);
+      noisefilename = offline_main;
+      noisefilename += "/share/calowaveformsim/";
       
-    case 2:
-      noise = new TTree("noise_midrad", "tree");
-      noise->ReadFile("/gpfs/mnt/gpfs02/sphenix/user/trinn/sPHENIX_emcal_cosmics_sector0/noise_waveforms/medium_raddmgnoise.csv", "a1:a2:a3:a4:a5:a6:a7:a8:a9:a10:a11:a12:a13:a14:a15:a16:a17:a18:a19:a20:a21:a22:a23:a24:a25:a26:a27:a28:a29:a30:a31");
-    default:
-      noise = new TTree("noise_norad", "tree");
-      noise->ReadFile("/gpfs/mnt/gpfs02/sphenix/user/trinn/sPHENIX_emcal_cosmics_sector0/noise_waveforms/no_raddmgnoise.csv", "a1:a2:a3:a4:a5:a6:a7:a8:a9:a10:a11:a12:a13:a14:a15:a16:a17:a18:a19:a20:a21:a22:a23:a24:a25:a26:a27:a28:a29:a30:a31");
-
+	switch(_noiselevel)
+	  {
+	  case 0 :
+	    noisefilename += "/no_raddmgnoise.csv";
+	    noise = new TTree("noise_norad", "tree");
+	    break;
+	  case 1:
+	    noisefilename += "/low_raddmgnoise.csv";
+	    noise = new TTree("noise_lowrad", "tree");
+	    break;
+	  case 2:
+	    noisefilename += "/medium_raddmgnoise.csv";
+	    noise = new TTree("noise_midrad", "tree");
+	    break;
+	  default:
+	    noisefilename += "/no_raddmgnoise.csv";
+	    noise = new TTree("noise_norad", "tree");
+	    break;
+	  } 
+    }
+  else 
+    {
+      noisefilename = noiseenv;
     }
 
+  noise->ReadFile(noisefilename.c_str(), "a1:a2:a3:a4:a5:a6:a7:a8:a9:a10:a11:a12:a13:a14:a15:a16:a17:a18:a19:a20:a21:a22:a23:a24:a25:a26:a27:a28:a29:a30:a31");
+	
 
 
   for (int i = 0; i < 31;i++)
@@ -115,27 +129,81 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   //Read in the template file, this currently points to a tim local area file, 
   //but a copy of this file is in the git repository.
   //----------------------------------------------------------------------------------------------------
-  std::string bbc_template_input_file = "/gpfs/mnt/gpfs02/sphenix/user/dlis/Projects/fit_emcal/waveform_template_bbc_0515_laser.root";
-  std::string cemc_template_input_file = "/gpfs/mnt/gpfs02/sphenix/user/trinn/fitting_algorithm_playing/waveform_simulation/calibrations/WaveformProcessing/templates/testbeam_cemc_template.root";
-  std::string ihcal_template_input_file = "/gpfs/mnt/gpfs02/sphenix/user/trinn/fitting_algorithm_playing/waveform_simulation/calibrations/WaveformProcessing/templates/testbeam_ihcal_template.root";
-  std::string ohcal_template_input_file = "/gpfs/mnt/gpfs02/sphenix/user/trinn/fitting_algorithm_playing/waveform_simulation/calibrations/WaveformProcessing/templates/testbeam_ohcal_template.root";
 
-  TFile* fin1 = TFile::Open(cemc_template_input_file.c_str());
+
+  const char *cemcenv = getenv("CALOWAVEFORMSIM_TEMPLATE_CEMC");
+  std::string cemcfilename;
+  if (noiseenv == nullptr)
+    {
+      const char *offline_main = getenv("OFFLINE_MAIN");
+      assert(offline_main);
+      cemcfilename = offline_main;
+      cemcfilename += "/share/calowaveformsim/testbeam_cemc_template.root";     
+    }
+  else 
+    {
+      cemcfilename = cemcenv;
+
+    }
+  const char *ihcalenv = getenv("CALOWAVEFORMSIM_TEMPLATE_IHCAL");
+  std::string ihcalfilename;
+  if (noiseenv == nullptr)
+    {
+      const char *offline_main = getenv("OFFLINE_MAIN");
+      assert(offline_main);
+      ihcalfilename = offline_main;
+      ihcalfilename += "/share/calowaveformsim/testbeam_ihcal_template.root";     
+    }
+  else 
+    {
+      ihcalfilename = ihcalenv;
+
+    }
+  const char *ohcalenv = getenv("CALOWAVEFORMSIM_TEMPLATE_OHCAL");
+  std::string ohcalfilename;
+  if (noiseenv == nullptr)
+    {
+      const char *offline_main = getenv("OFFLINE_MAIN");
+      assert(offline_main);
+      ohcalfilename = offline_main;
+      ohcalfilename += "/share/calowaveformsim/testbeam_ohcal_template.root";     
+    }
+  else 
+    {
+      ohcalfilename = ohcalenv;
+
+    }
+  const char *bbcenv = getenv("CALOWAVEFORMSIM_TEMPLATE_BBC");
+  std::string bbcfilename;
+  if (noiseenv == nullptr)
+    {
+      const char *offline_main = getenv("OFFLINE_MAIN");
+      assert(offline_main);
+      bbcfilename = offline_main;
+      bbcfilename += "/share/calowaveformsim/laser_bbc_template.root";     
+    }
+  else 
+    {
+      bbcfilename = bbcenv;
+    }
+
+
+  TFile* fin1 = TFile::Open(cemcfilename.c_str());
   assert(fin1);
   assert(fin1->IsOpen());
   h_template_emcal = static_cast<TProfile*>(fin1->Get("waveform_template"));
 
-  TFile* fin2 = TFile::Open(ihcal_template_input_file.c_str());
+  TFile* fin2 = TFile::Open(ihcalfilename.c_str());
   assert(fin2);
   assert(fin2->IsOpen());
   h_template_ihcal = static_cast<TProfile*>(fin2->Get("waveform_template"));
 
-  TFile* fin3 = TFile::Open(ohcal_template_input_file.c_str());
+  TFile* fin3 = TFile::Open(ohcalfilename.c_str());
   assert(fin3);
   assert(fin3->IsOpen());
   h_template_ohcal = static_cast<TProfile*>(fin3->Get("waveform_template"));
 
-  TFile* fin4 = TFile::Open(bbc_template_input_file.c_str());
+  TFile* fin4 = TFile::Open(bbcfilename.c_str());
   assert(fin4);
   assert(fin4->IsOpen());
   h_template_bbc = static_cast<TProfile*>(fin4->Get("waveform_template"));

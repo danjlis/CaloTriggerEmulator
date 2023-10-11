@@ -33,6 +33,7 @@ class CaloWaveFormSim : public SubsysReco
   //! destructor
   virtual ~CaloWaveFormSim();
 
+
   //! full initialization
   int Init(PHCompositeNode *);
   int InitRun(PHCompositeNode *);
@@ -54,13 +55,18 @@ class CaloWaveFormSim : public SubsysReco
   void SetNoise(int noiselevel) { _noiselevel = noiselevel; }
   void SetGain(std::string gain){ _gain = _gain_opts[gain];}
 
- protected:
-
+ private:
   std::string detector;
   std::vector<float> m_waveform_cemc[24576];
   std::vector<float> m_waveform_ihcal[1536];
   std::vector<float> m_waveform_ohcal[1536];
   std::vector<float> m_waveform_bbc[256];
+  
+  static TProfile* h_template_bbc;
+  static TProfile* h_template_emcal;
+  static TProfile* h_template_ihcal;
+  static TProfile* h_template_ohcal;
+
 
   LightCollectionModel light_collection_model;
 
@@ -88,11 +94,6 @@ class CaloWaveFormSim : public SubsysReco
 
   int ROWDIM = 320;
   int COLUMNDIM = 27;
-
-  static TProfile* h_template_bbc;
-  static TProfile* h_template_emcal;
-  static TProfile* h_template_ihcal;
-  static TProfile* h_template_ohcal;
  
   static double template_function_bbc(double *x, double *par);
   static double template_function_cemc(double *x, double *par);

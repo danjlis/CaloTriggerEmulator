@@ -19,6 +19,7 @@ HCALEmulatorTreeMaker::HCALEmulatorTreeMaker(const std::string &name, const std:
   SubsysReco(name)
   
 {
+  useCaloTowerBuilder = false;
   _nodename = nodename;
   _foutname = outfilename;  
   _verbosity = 0;
@@ -60,6 +61,16 @@ int HCALEmulatorTreeMaker::Init(PHCompositeNode *topNode)
 
   _i_event = 0;
 
+  if (useCaloTowerBuilder)
+    {
+      _tree_hcal->Branch("hcalin_energy",&b_hcalin_energy);
+      _tree_hcal->Branch("hcalin_phibin",&b_hcalin_phibin);
+      _tree_hcal->Branch("hcalin_etabin",&b_hcalin_etabin);
+      _tree_hcal->Branch("hcalout_energy",&b_hcalout_energy);
+      _tree_hcal->Branch("hcalout_phibin",&b_hcalout_phibin);
+      _tree_hcal->Branch("hcalout_etabin",&b_hcalout_etabin);
+
+    }
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -85,6 +96,12 @@ void HCALEmulatorTreeMaker::reset_tree_vars()
   b_event_hcalout = 0;
 
   b_trigger_bits_hcal.clear();
+  b_hcalin_energy.clear();
+  b_hcalin_phibin.clear();
+  b_hcalin_etabin.clear();
+  b_hcalout_energy.clear();
+  b_hcalout_phibin.clear();
+  b_hcalout_etabin.clear();
 
   for (int i = 0; i < 24; i++)
     {
@@ -216,7 +233,7 @@ int HCALEmulatorTreeMaker::process_event(PHCompositeNode *topNode)
   if (!_trigger_bits)
     {
       std::cout <<" no trigger bits..." <<std::endl;
-	exit(1);
+      exit(1);
     }
   i = 0;
   for (auto iter = _trigger_bits->begin(); iter < _trigger_bits->end(); i++, ++iter)
@@ -224,9 +241,56 @@ int HCALEmulatorTreeMaker::process_event(PHCompositeNode *topNode)
       b_trigger_bits_hcal.push_back((*iter));
     } 
 
+  if (useCaloTowerBuilder)
+    {
+      _towers = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALIN");
+      if (!_towers)
+	{
+	  cout << "No HCALIN towers..." <<endl;
+	  exit(1);	  
+	}
+      int size;
+
+      size = _towers->size(); //online towers should be the same!
+      for (int channel = 0; channel < size;channel++)
+	{
+	  _tower = _towers->get_tower_at_channel(channel);
+	  float energy = _tower->get_energy();
+	  unsigned int towerkey = _towers->encode_key(channel);
+	  int ieta = _towers->getTowerEtaBin(towerkey);
+	  int iphi = _towers->getTowerPhiBin(towerkey);
+	
+	  b_hcalin_energy.push_back(energy);
+	  b_hcalin_etabin.push_back(ieta);
+	  b_hcalin_phibin.push_back(iphi);
+      }
+
+      _towers = findNode::getClass<TowerInfoContainerv1>(topNode, "TOWERS_HCALOUT");
+      if (!_towers)
+	{
+	  cout << "No HCALOUT towers..." <<endl;
+	  exit(1);	  
+	}
+
+      size = _towers->size(); //online towers should be the same!
+      for (int channel = 0; channel < size;channel++)
+	{
+	  _tower = _towers->get_tower_at_channel(channel);
+	  float energy = _tower->get_energy();
+	  unsigned int towerkey = _towers->encode_key(channel);
+	  int ieta = _towers->getTowerEtaBin(towerkey);
+	  int iphi = _towers->getTowerPhiBin(towerkey);
+	
+	  b_hcalout_energy.push_back(energy);
+	  b_hcalout_etabin.push_back(ieta);
+	  b_hcalout_phibin.push_back(iphi);
+      }
+
+    }
   if (_verbosity) std::cout << __FILE__ << " "<< __LINE__<<" "<<std::endl;
 
   _tree_hcal->Fill();
+
   return Fun4AllReturnCodes::EVENT_OK;
 }
 

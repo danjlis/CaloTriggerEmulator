@@ -9,7 +9,9 @@
 #include <CaloWaveFormSim.h>
 #include <CaloTriggerEmulator.h>
 #include <CaloPacketGetter.h>
+#include <calowaveformsim/MBDEmulatorTreeMaker.h>
 
+R__LOAD_LIBRARY(libmbdemulatortreemaker.so)
 R__LOAD_LIBRARY(libfun4allraw.so)
 R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libcalowaveformsim.so)
@@ -17,12 +19,19 @@ R__LOAD_LIBRARY(libcalotriggeremulator.so)
 R__LOAD_LIBRARY(libcalopacketgetter.so)
 #endif
 
-  void Fun4All_MBDTriggerEmulator(const std::string &fname1 = "/sphenix/lustre01/sphnxpro/commissioning/mbd/beam/beam_mbd-00014232-0000.prdf", const char *outfile = "trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
+  void Fun4All_MBDTriggerEmulator(const int runnumber)
 {
   gSystem->Load("libg4dst");
   gSystem->Load("libcalowaveformsim");
   gSystem->Load("libcalotriggeremulator");
   gSystem->Load("libcalopacketgetter");
+  gSystem->Load("libtmbdemulatortreemaker");
+
+  const char *outfile1 = Form("mbdemu_ZDC_000%d.root", runnumber);
+  const char *outfile2 = Form("mbdemuhist_ZDC_000%d.root", runnumber);
+
+  std::string fname1 = Form("/sphenix/lustre01/sphnxpro/commissioning/mbd/beam/beam_seb18-000%d-0000.prdf", runnumber);;
+
 
   Fun4AllServer *se = Fun4AllServer::instance();
 
@@ -31,9 +40,13 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
   se->registerSubsystem(ca);
   
   CaloTriggerEmulator *te = new CaloTriggerEmulator("CALOTRIGGEREMULATOR_MBD",outfile2);
-  te->Verbosity(2);
+  te->Verbosity(0);
   te->setTriggerType("MBD");
   se->registerSubsystem(te);
+
+  MBDEmulatorTreeMaker *tt1 = new MBDEmulatorTreeMaker("MBDEMULATORTREEMAKER_MBD",outfile1, "LL1OUT_MBD");
+  se->registerSubsystem(tt1);
+
   
   Fun4AllInputManager *in = new Fun4AllPrdfInputManager("in");
   in->fileopen(fname1);
@@ -41,6 +54,6 @@ R__LOAD_LIBRARY(libcalopacketgetter.so)
 
 // Fun4All
 
-  se->run(3);
+  se->run(100000);
   se->End();
 }

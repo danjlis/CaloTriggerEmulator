@@ -64,6 +64,9 @@ class CaloTriggerEmulator : public SubsysReco
 
   //! Set TriggerType
   void setTriggerType(const std::string &name);
+  void setNSamples(int nsamples) { m_nsamples = nsamples; }
+  void setThreshold(int threshold) { _m_threshold = threshold; }
+
   bool CheckFiberMasks(TriggerDefs::TriggerPrimKey key);
   bool CheckChannelMasks(TriggerDefs::TriggerSumKey key);
   void Verbosity(const int verbosity) { _verbose = verbosity; }
@@ -143,6 +146,7 @@ class CaloTriggerEmulator : public SubsysReco
   unsigned int m_l1_adc_table[1024];
   unsigned int m_l1_adc_table_time[1024];
   unsigned int m_l1_slewing_table[4096];
+  unsigned int m_l1_hcal_table[4096];
 
   //! Trigger primitives
   unsigned int m_trig_charge[8];

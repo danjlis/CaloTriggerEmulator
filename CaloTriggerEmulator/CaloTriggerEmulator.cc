@@ -60,8 +60,8 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _primitive = 0;
   _n_primitives = 0;
   _n_sums = 16;
-  _m_trig_sub_delay = 6;
-  _m_threshold = 10;
+  _m_trig_sub_delay = 3;
+  _m_threshold = 1;
 
   m_nhit1 = 2;
   m_nhit2 = 10;
@@ -73,6 +73,7 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _m_det_map[TriggerDefs::TriggerId::jetTId] = {"CEMC", "HCALOUT", "HCALIN"};
   _m_det_map[TriggerDefs::TriggerId::mbdTId] = {"MBD"};
   _m_det_map[TriggerDefs::TriggerId::cosmicTId] = {"HCALIN", "HCALOUT"};
+  _m_det_map[TriggerDefs::TriggerId::cosmic_coinTId] = {"HCALIN", "HCALOUT"};
   _m_det_map[TriggerDefs::TriggerId::pairTId] = {"CEMC"};
 
   _m_prim_map[TriggerDefs::DetectorId::noneDId] = 0;
@@ -85,8 +86,8 @@ CaloTriggerEmulator::CaloTriggerEmulator(const std::string& name, const std::str
   _do_hcalin = false;
   _do_hcalout = false;
   _do_mbd = false;
-  _masks_channel = {69337149, 70385703};
-  _masks_fiber = {69337136, 70385696};
+  _masks_channel = {69337149};//, 70385703};
+  _masks_fiber = {69337136};//, 70385696};
 }
 
 CaloTriggerEmulator::~CaloTriggerEmulator()
@@ -122,20 +123,20 @@ int CaloTriggerEmulator::Init(PHCompositeNode* topNode)
   hm = new Fun4AllHistoManager(Name());
   outfile = new TFile(outfilename.c_str(), "RECREATE");
 
-  if (_verbose) std::cout << __FUNCTION__ << std::endl;
+  if(_verbose>=2) std::cout << __FUNCTION__ << std::endl;
 
   return 0;
 }
 
 int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
 {
-  if (_verbose) std::cout << __FUNCTION__ << std::endl;
+  if(_verbose>=2) std::cout << __FUNCTION__ << std::endl;
 
   // Get number of primitives to construct;
 
   if (_triggerid == TriggerDefs::TriggerId::jetTId)
     {
-      if (_verbose) std::cout << "Using Jet Trigger."<<std::endl;
+      if(_verbose>=2) std::cout << "Using Jet Trigger."<<std::endl;
       _do_cemc = true;
       _do_hcalin = true;
       _do_hcalout = true;
@@ -143,7 +144,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
     }
   else if (_triggerid == TriggerDefs::TriggerId::mbdTId)
     {
-      if (_verbose) std::cout << "Using MBD Trigger."<<std::endl;
+      if(_verbose>=2) std::cout << "Using MBD Trigger."<<std::endl;
       _do_cemc = false;
       _do_hcalin = false;
       _do_hcalout = false;      
@@ -151,7 +152,15 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
     }
   else if (_triggerid == TriggerDefs::TriggerId::cosmicTId)
     {
-      if (_verbose) std::cout << "Using Cosmic Trigger."<<std::endl;
+      if(_verbose>=2) std::cout << "Using Cosmic Trigger."<<std::endl;
+      _do_cemc = false;
+      _do_hcalin = true;
+      _do_hcalout = true;
+      _do_mbd = false;
+    }
+  else if (_triggerid == TriggerDefs::TriggerId::cosmic_coinTId)
+    {
+      if(_verbose>=2) std::cout << "Using Cosmic Coincidence Trigger."<<std::endl;
       _do_cemc = false;
       _do_hcalin = true;
       _do_hcalout = true;
@@ -159,7 +168,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
     }
   else if (_triggerid == TriggerDefs::TriggerId::pairTId)
     {
-      if (_verbose) std::cout << "Using Pair Trigger."<<std::endl;
+      if(_verbose>=2) std::cout << "Using Pair Trigger."<<std::endl;
       _do_cemc = true;
       _do_hcalin = false;
       _do_hcalout = false;
@@ -171,6 +180,51 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
       return Fun4AllReturnCodes::ABORTRUN;
     }
 
+
+  if (_triggerid == TriggerDefs::TriggerId::cosmic_coinTId)
+    {
+      unsigned int bits1, bits2, sumbits1, sumbits2;
+      for (int i = 0; i < 4096; i++)
+	{
+	  sumbits1 = 0;
+	  sumbits2 = 0;
+
+	  bits1 = (i & 0x3f);
+	  bits2 = ((i>>6) & 0x3f);
+	  for (int j = 0; j < 3; j++)
+	    {
+	      if (((bits1>>j)&0x1) && ((bits2>>j)&0x1)) sumbits1 ++; 
+              if (((bits1>>(j+3))&0x1) && ((bits2>>(j+3))&0x1)) sumbits2 ++;
+	    }
+
+	  m_l1_hcal_table[i] = 0;
+	  if (i == 0) continue;
+	  m_l1_hcal_table[i] |= (sumbits1 ? 0x1 : 0);
+	  m_l1_hcal_table[i] |= (sumbits2 ? 0x2 : 0);
+	}
+    }
+  else if (_triggerid == TriggerDefs::TriggerId::cosmicTId)
+    {
+      unsigned int bits1, bits2, sumbits1, sumbits2;
+      for (int i = 0; i < 4096; i++)
+	{
+	  sumbits1 = 0;
+	  sumbits2 = 0;
+
+	  bits1 = (i & 0x3f);
+	  bits2 = ((i>>6) & 0x3f);
+	  for (int j = 0; j < 6; j++)
+	    {
+	      sumbits1 += ((bits1>>j) & 0x1);
+	      sumbits2 += ((bits2>>j) & 0x1);
+	    }
+
+	  m_l1_hcal_table[i] = 0;
+	  if (i == 0) continue;
+	  m_l1_hcal_table[i] |= (sumbits1 ? 0x1 : 0);
+	  m_l1_hcal_table[i] |= (sumbits2 ? 0x2 : 0);
+	}
+    }
 
   _ll1_nodename = "LL1OUT_" + _trigger;
 
@@ -249,7 +303,7 @@ int CaloTriggerEmulator::InitRun(PHCompositeNode* topNode)
 int CaloTriggerEmulator::process_event(PHCompositeNode* topNode)
 {
 
-  if (_verbose) std::cout << __FUNCTION__ << ": event " <<_nevent<<std::endl;
+  if(_verbose>=1) std::cout << __FUNCTION__ << ": event " <<_nevent<<std::endl;
 
   GetNodes(topNode);
 
@@ -261,7 +315,7 @@ int CaloTriggerEmulator::process_event(PHCompositeNode* topNode)
   
   _nevent++;
 
-  if (_verbose) identify();
+  if(_verbose>=2) identify();
   
   return Fun4AllReturnCodes::EVENT_OK;
 }
@@ -350,7 +404,7 @@ int CaloTriggerEmulator::process_waveforms()
 	  m_peak_sub_ped_cemc[ij] = v_peak_sub_ped;
 	  ij++;
 	}
-      if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
+      if(_verbose>=2) std::cout << "Processed waves: "<<ij <<std::endl;
       if (!ij) return Fun4AllReturnCodes::ABORTEVENT;
     }
   if (_do_hcalin)
@@ -385,7 +439,7 @@ int CaloTriggerEmulator::process_waveforms()
 	  m_peak_sub_ped_hcalin[ij] = v_peak_sub_ped;
 	  ij++;
 	}
-      if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
+      if(_verbose>=2) std::cout << "Processed waves: "<<ij <<std::endl;
       if (!ij) return Fun4AllReturnCodes::ABORTEVENT;      
     }
 
@@ -422,7 +476,7 @@ int CaloTriggerEmulator::process_waveforms()
 	  m_peak_sub_ped_hcalout[ij] = v_peak_sub_ped;
 	  ij++;
 	}
-      if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
+      if(_verbose>=2) std::cout << "Processed waves: "<<ij <<std::endl;
       if (!ij) return Fun4AllReturnCodes::ABORTEVENT;      
     }
   if (_do_mbd)
@@ -467,7 +521,7 @@ int CaloTriggerEmulator::process_waveforms()
 
 	}
 
-      if (_verbose) std::cout << "Processed waves: "<<ij <<std::endl;
+      if(_verbose>=2) std::cout << "Processed waves: "<<ij <<std::endl;
       if (!ij) return Fun4AllReturnCodes::ABORTEVENT;
     }
 
@@ -477,7 +531,7 @@ int CaloTriggerEmulator::process_waveforms()
 int CaloTriggerEmulator::process_primitives()
 {
   
-  if (_verbose) std::cout << __FILE__<<"::"<<__FUNCTION__ <<"::"<<__LINE__<< std::endl;
+  if(_verbose>=2) std::cout << __FILE__<<"::"<<__FUNCTION__ <<"::"<<__LINE__<< std::endl;
   
   unsigned int ip, j;
   int id_peak;
@@ -486,7 +540,7 @@ int CaloTriggerEmulator::process_primitives()
   bool mask;
   if (_do_cemc)
     {
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering CEMC primitives."<<std::endl;
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering CEMC primitives."<<std::endl;
       ip = 0;
       _n_primitives = _m_prim_map[TriggerDefs::DetectorId::cemcDId];
       for (i = 0; i < _n_primitives; i++, ip++)
@@ -537,13 +591,13 @@ int CaloTriggerEmulator::process_primitives()
 	    }
 	  
 	  _primitives_cemc->add_primitive(primkey, _primitive);
-	  if (_verbose) std::cout << "Total primitives in cemc: "<<_primitive->size()<<std::endl;	  	  
+	  if(_verbose>=2) std::cout << "Total primitives in cemc: "<<_primitive->size()<<std::endl;	  	  
 	}  
 
     }
   if (_do_hcalout)
     {
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering HCALOU primitives."<<std::endl;
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering HCALOU primitives."<<std::endl;
       ip = 0;
       _n_primitives = _m_prim_map[TriggerDefs::DetectorId::hcaloutDId];
       for (i = 0; i < _n_primitives; i++, ip++)
@@ -591,13 +645,13 @@ int CaloTriggerEmulator::process_primitives()
 	    }
 	  
 	  _primitives_hcalout->add_primitive(primkey, _primitive);
-	  if (_verbose) std::cout << "Total primitives in hcalout: "<<_primitive->size()<<std::endl;	  
+	  if(_verbose>=2) std::cout << "Total primitives in hcalout: "<<_primitive->size()<<std::endl;	  
 	}  
 
     }
   if (_do_hcalin)
     {
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering HCALIN primitives."<<std::endl;
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering HCALIN primitives."<<std::endl;
       ip = 0;
       _n_primitives = _m_prim_map[TriggerDefs::DetectorId::hcalinDId];
 
@@ -645,14 +699,14 @@ int CaloTriggerEmulator::process_primitives()
 	      _primitive->add_sum(sumkey, _sum);
 	      
 	    }
-	  if (_verbose) std::cout << "Total primitives in hcalin: "<<_primitive->size()<<std::endl;	  
+	  if(_verbose>=2) std::cout << "Total primitives in hcalin: "<<_primitive->size()<<std::endl;	  
 	  _primitives_hcalin->add_primitive(primkey, _primitive);
 	  
 	}  
     }
   if (_do_mbd)
     {
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering MBD primitives."<<std::endl;
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<"Gathering MBD primitives."<<std::endl;
 
       ip = 0;
       _n_primitives = _m_prim_map[TriggerDefs::DetectorId::mbdDId];
@@ -749,7 +803,7 @@ int CaloTriggerEmulator::process_primitives()
 	  _primitives->add_primitive(primkey, _primitive);
 	}
 
-      if (_verbose) std::cout << "Total primitives in mbd: "<<_primitives->size()<<std::endl; 
+      if(_verbose>=2) std::cout << "Total primitives in mbd: "<<_primitives->size()<<std::endl; 
 
     }
 
@@ -769,7 +823,7 @@ int CaloTriggerEmulator::process_trigger()
   if (_triggerid == TriggerDefs::TriggerId::cosmicTId)
     {
 
-      if (_verbose) 
+      if(_verbose>=2) 
 	{
 	  std::cout <<__FUNCTION__<<" "<<__LINE__<<" processing COSMIC trigger , bits before: "<< _bits->size();
 	}
@@ -780,24 +834,24 @@ int CaloTriggerEmulator::process_trigger()
 	}
       TriggerPrimitiveContainerv1::Range range;      
       range = _primitives_hcalout->getTriggerPrimitives();
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalout->size()<<std::endl; 
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalout->size()<<std::endl; 
       for (TriggerPrimitiveContainerv1::Iter iter = range.first ; iter != range.second ; ++iter)
 	{
 	  TriggerDefs::TriggerPrimKey key = (*iter).first;
 	  if (CheckFiberMasks(key)) {
-	    if (_verbose) std::cout << "masked: "<<key<<std::endl;
+	    if(_verbose>=2) std::cout << "masked: "<<key<<std::endl;
 	    continue;
 	  }
 
 	  _primitive  = (*iter).second;
 	  TriggerPrimitive::Range sumrange = _primitive->getSums(); 
-	  if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
+	  if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
 	  for (TriggerPrimitive::Iter iter_sum = sumrange.first; iter_sum != sumrange.second; ++iter_sum)
 	    {
 	      TriggerDefs::TriggerSumKey sumkey = (*iter_sum).first;
 	      int i = 0;
 	      if (CheckChannelMasks(sumkey)) continue;
-	      if (_verbose) cout <<" sum " << sumkey << " size "<<(*iter_sum).second->size()<<std::endl;
+	      if(_verbose>=2) cout <<" sum " << sumkey << " size "<<(*iter_sum).second->size()<<std::endl;
 	      for (auto it_s = (*iter_sum).second->begin(); it_s != (*iter_sum).second->end(); ++it_s)
 		{
 		  
@@ -812,26 +866,26 @@ int CaloTriggerEmulator::process_trigger()
 	}
 
       range = _primitives_hcalin->getTriggerPrimitives();
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalin->size()<<std::endl; 
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalin->size()<<std::endl; 
       for (TriggerPrimitiveContainerv1::Iter iter = range.first ; iter != range.second ; ++iter)
 	{
 	  TriggerDefs::TriggerPrimKey key = (*iter).first;
 	  if (CheckFiberMasks(key)) {
-	    if (_verbose) std::cout << "masked: "<<key<<std::endl;
+	    if(_verbose>=2) std::cout << "masked: "<<key<<std::endl;
 	    continue;
 	  }
 	  _primitive = (*iter).second;
-	  if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
+	  if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
 	  TriggerPrimitive::Range sumrange = _primitive->getSums(); 
 	  for (TriggerPrimitive::Iter iter_sum = sumrange.first; iter_sum != sumrange.second; ++iter_sum)
 	    {
 	      TriggerDefs::TriggerSumKey sumkey = (*iter_sum).first;
 	      int i = 0;
 	      if (CheckChannelMasks(sumkey)) {
-		if (_verbose) std::cout << "masked: "<<sumkey<<std::endl;
+		if(_verbose>=2) std::cout << "masked: "<<sumkey<<std::endl;
 		continue;
 	      }
-	      if (_verbose) cout <<" sum " << sumkey << " size "<<(*iter_sum).second->size()<<std::endl;
+	      if(_verbose>=2) cout <<" sum " << sumkey << " size "<<(*iter_sum).second->size()<<std::endl;
 	      for (auto it_s = (*iter_sum).second->begin(); it_s != (*iter_sum).second->end(); ++it_s)
 		{
 
@@ -846,20 +900,170 @@ int CaloTriggerEmulator::process_trigger()
 	}
       _bits->clear();
       int pass = 0;
-      if (_verbose) std::cout << "bits after: ";
+      if(_verbose>=2) std::cout << "bits after: ";
       for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++)
 	{
-	  if (_verbose)std::cout <<" "<<bits.at(is);
+	  if(_verbose>=2)std::cout <<" "<<bits.at(is);
 	  _bits->push_back(bits.at(is));
 	  if (bits.at(is) == 1) pass = 1;
 	}
       _npassed += pass;
-      if (_verbose)std::cout <<" "<<std::endl;
+      if(_verbose>=2)std::cout <<" "<<std::endl;
+    }
+
+  if (_triggerid == TriggerDefs::TriggerId::cosmic_coinTId)
+    {
+      unsigned int cosmic_organized_sums[2][12][32];
+      if(_verbose>=2) 
+	{
+	  std::cout <<__FUNCTION__<<" "<<__LINE__<<" processing COSMIC COINCIDENCE trigger , bits before: "<< _bits->size();
+	}
+      if (!_primitives_hcalout || !_primitives_hcalin)
+	{
+	  std::cout << "There is no primitive container" << std::endl;
+	  return Fun4AllReturnCodes::ABORTEVENT;
+	}
+      uint16_t icard, icosmic, isum;
+      TriggerPrimitiveContainerv1::Range range;      
+      for (int isam = 0; isam < m_nsamples - _m_trig_sub_delay;isam++)
+	{
+	  for (int ii = 0; ii < 2; ii ++)
+	    {
+	      for (int iii = 0; iii < 12; iii++)
+		{
+		  for (int iv = 0; iv < 32; iv ++)
+		    {
+		      cosmic_organized_sums[ii][iii][iv] =0;
+		    }
+		}
+	    }
+
+	  range = _primitives_hcalout->getTriggerPrimitives();
+	  if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalout->size()<<std::endl; 
+	  for (TriggerPrimitiveContainerv1::Iter iter = range.first ; iter != range.second ; ++iter)
+	    {
+	      TriggerDefs::TriggerPrimKey key = (*iter).first;
+	      if (CheckFiberMasks(key)) {
+		if(_verbose>=2) std::cout << "masked: "<<key<<std::endl;
+		continue;
+	      }
+	      
+	      _primitive  = (*iter).second;
+	      
+	      uint16_t primphi = TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(key);
+	      uint16_t primeta = TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(key);
+	      icard = (primphi < 4 ? 0 : 1);
+	      TriggerPrimitive::Range sumrange = _primitive->getSums(); 
+	      //if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
+	      for (TriggerPrimitive::Iter iter_sum = sumrange.first; iter_sum != sumrange.second; ++iter_sum)
+		{
+		  TriggerDefs::TriggerSumKey sumkey = (*iter_sum).first;
+		  uint16_t sumphi = TriggerDefs::getSumPhiId(sumkey);
+		  uint16_t sumeta = TriggerDefs::getSumEtaId(sumkey);
+		  
+		  icosmic = (primeta*4 + (3 - sumeta))/2;
+		  isum = ((primphi%4)*8) + sumphi*2 + (1 - (sumeta%2));
+
+		  // if(_verbose>=2) std::cout << "putting sum " << isam << " in " << sumeta <<" - "<<sumphi << " -> " << icard <<" , "<<icosmic<<" , "<<isum<<std::endl; 		  
+		  if (CheckChannelMasks(sumkey)) continue;
+		  cosmic_organized_sums[icard][icosmic][isum] = *((*iter_sum).second->begin() + isam);		  
+		  
+		}
+	      
+	      
+	    }
+
+	  range = _primitives_hcalin->getTriggerPrimitives();
+	  if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" hcalout primitives size: "<<_primitives_hcalin->size()<<std::endl; 
+	  for (TriggerPrimitiveContainerv1::Iter iter = range.first ; iter != range.second ; ++iter)
+	    {
+	      TriggerDefs::TriggerPrimKey key = (*iter).first;
+	      if (CheckFiberMasks(key)) {
+		if(_verbose>=2) std::cout << "masked: "<<key<<std::endl;
+		continue;
+	      }
+	      
+	      _primitive  = (*iter).second;
+	      
+	      uint16_t primphi = TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(key);
+	      uint16_t primeta = TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(key);
+	      icard = (primphi < 4 ? 0 : 1);
+	      TriggerPrimitive::Range sumrange = _primitive->getSums(); 
+	      //if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" key: "<<key<<" size: "<<_primitive->size()<<std::endl; 
+	      for (TriggerPrimitive::Iter iter_sum = sumrange.first; iter_sum != sumrange.second; ++iter_sum)
+		{
+		  TriggerDefs::TriggerSumKey sumkey = (*iter_sum).first;
+
+		  uint16_t sumphi = TriggerDefs::getSumPhiId(sumkey);
+		  uint16_t sumeta = TriggerDefs::getSumEtaId(sumkey);
+		  
+		  icosmic = 6 + (primeta*4 + (3 - sumeta))/2;
+		  isum = ((primphi%4)*8) + sumphi*2 + (1 - (sumeta%2));
+		  if (CheckChannelMasks(sumkey)) continue;
+		  cosmic_organized_sums[icard][icosmic][isum] = *((*iter_sum).second->begin() + isam);		  
+		  
+		}
+	      
+	      
+	    }
+	  
+	  unsigned int hit_cosmic[2] = {0, 0};
+	  for (int ica = 0; ica < 2; ica++)
+	    {
+	      for (int ic = 0; ic < 6; ic++)
+		{
+		  for (int isum = 0; isum < 32; isum++)
+		    {
+		      hit_cosmic[ica] |= ((cosmic_organized_sums[ica][ic][isum] > _m_threshold ? 0x1 : 0) << ic);
+		      hit_cosmic[ica] |= ((cosmic_organized_sums[ica][ic+6][isum] > _m_threshold ? 0x1 : 0) << (6+ic));
+		    }
+		}
+	    }
+	  if (((m_l1_hcal_table[hit_cosmic[0]] & 0x1) == 0x1 ) && ((m_l1_hcal_table[hit_cosmic[1]] & 0x2) == 0x2)) bits.at(isam) |= 1; 
+	  if (((m_l1_hcal_table[hit_cosmic[0]] & 0x2) == 0x2 ) && ((m_l1_hcal_table[hit_cosmic[1]] & 0x1) == 0x1)) bits.at(isam) |= 1; 
+
+	  if (_verbose >=2 && isam == 6)
+	    {
+	      for (int ins = 0; ins < 2; ins++)
+		{
+
+		  for (int iphii = 0; iphii < 16; iphii++)
+		    {
+		      std::cout <<" "<<std::endl;
+		      for (int ietaa = 0; ietaa < 12; ietaa++)		
+			{
+			  std:: cout << cosmic_organized_sums[ins][ietaa/2][(iphii%16)*2 + ietaa%2] << " ";
+			  if (ietaa % 2) std:: cout << "| ";
+			}
+		      std::cout << "             ";
+		      for (int ietaa = 0; ietaa < 12; ietaa++)		
+			{
+			  std:: cout << cosmic_organized_sums[ins][6 + ietaa/2][(iphii%16)*2 + ietaa%2] << " ";
+			  if (ietaa % 2) std:: cout << "| ";
+			}
+
+		    }
+		}
+	    }
+
+	}
+
+      _bits->clear();
+      int pass = 0;
+      if(_verbose>=2) std::cout << "bits after: ";
+      for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++)
+	{
+	  if(_verbose>=2)std::cout <<" "<<bits.at(is);
+	  _bits->push_back(bits.at(is));
+	  if (bits.at(is) == 1) pass = 1;
+	}
+      _npassed += pass;
+      if(_verbose>=2)std::cout <<" "<<std::endl;
     }
   else if (_triggerid == TriggerDefs::TriggerId::mbdTId)
     {
 
-      if (_verbose) 
+      if(_verbose>=2) 
 	{
 	  std::cout <<__FUNCTION__<<" "<<__LINE__<<" processing MBD trigger , bits before: "<< _bits->size();
 	}
@@ -878,7 +1082,7 @@ int CaloTriggerEmulator::process_trigger()
 
       range = _primitives->getTriggerPrimitives();
       
-      if (_verbose) std::cout << __FUNCTION__<<" "<<__LINE__<<" mbd primitives size: "<<_primitives->size()<<std::endl; 
+      if(_verbose>=2) std::cout << __FUNCTION__<<" "<<__LINE__<<" mbd primitives size: "<<_primitives->size()<<std::endl; 
 
       std::vector<unsigned int> *word_mbd = nullptr;
 
@@ -1005,13 +1209,13 @@ int CaloTriggerEmulator::process_trigger()
 	}
 
       _bits->clear();
-      if (_verbose) std::cout << "bits after: ";
+      if(_verbose>=2) std::cout << "bits after: ";
       for (int is = 0; is < m_nsamples - _m_trig_sub_delay; is++)
 	{
-	  if (_verbose)std::cout <<" "<<bits.at(is);
+	  if(_verbose>=2)std::cout <<" "<<bits.at(is);
 	  _bits->push_back(bits.at(is));
 	}
-      if (_verbose)std::cout <<" "<<std::endl;
+      if(_verbose>=2)std::cout <<" "<<std::endl;
       
       for (int is = 0; is < 8; is++)
 	{
@@ -1029,7 +1233,7 @@ int CaloTriggerEmulator::process_trigger()
 void CaloTriggerEmulator::GetNodes(PHCompositeNode* topNode)
 {
 
-  if (_verbose) std::cout << __FUNCTION__ << std::endl;
+  if(_verbose>=2) std::cout << __FUNCTION__ << std::endl;
   _ll1out = findNode::getClass<LL1Outv2>(topNode, _ll1_nodename);
 
   if (!_ll1out) 
@@ -1117,7 +1321,7 @@ void CaloTriggerEmulator::GetNodes(PHCompositeNode* topNode)
 void CaloTriggerEmulator::CreateNodes(PHCompositeNode* topNode)
 {
 
-  if (_verbose) std::cout << __FUNCTION__ << std::endl;
+  if(_verbose>=2) std::cout << __FUNCTION__ << std::endl;
 
   PHNodeIterator iter(topNode);
   PHCompositeNode *dstNode = dynamic_cast<PHCompositeNode *>(iter.findFirst("PHCompositeNode", "DST"));
@@ -1182,7 +1386,7 @@ void CaloTriggerEmulator::CreateNodes(PHCompositeNode* topNode)
 int CaloTriggerEmulator::End(PHCompositeNode* topNode)
 {
 
-  if (_verbose) std::cout << "Processed " << _nevent << " events. " << std::endl;
+
   std::cout << "------------------------" <<std::endl;
   std::cout << "Total passed: " <<_npassed<<"/"<<_nevent <<std::endl;
   std::cout << "------------------------" <<std::endl;
@@ -1200,9 +1404,13 @@ void CaloTriggerEmulator::identify()
 {
   std::cout <<  " CaloTriggerEmulator: "<< _trigger << std::endl;
   std::cout <<  " LL1Out: "<< std::endl;
+  
   if(_ll1out) _ll1out->identify();
-  if(_ll1out_cemc) _ll1out_cemc->identify();
-  if(_ll1out_hcalin) _ll1out_hcalin->identify();
-  if(_ll1out_hcalout) _ll1out_hcalout->identify();
+  if (_verbose > 3)
+    {
+      if(_ll1out_cemc) _ll1out_cemc->identify();
+      if(_ll1out_hcalin) _ll1out_hcalin->identify();
+      if(_ll1out_hcalout) _ll1out_hcalout->identify();
+    }
   std::cout << " Processed " << _nevent << std::endl;
 }

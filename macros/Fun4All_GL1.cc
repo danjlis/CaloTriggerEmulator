@@ -14,7 +14,7 @@ R__LOAD_LIBRARY(libfun4all.so)
 R__LOAD_LIBRARY(libgl1packetgetter.so)
 #endif
 
-  void Fun4All_GL1(const std::string &fname1 = "/sphenix/lustre01/sphnxpro/commissioning/GL1/beam/GL1_beam_gl1daq-00020432-0000.prdf", const char *outfile = "gl1_trees.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
+  void Fun4All_GL1(const std::string &fname1 = "/sphenix/lustre01/sphnxpro/commissioning/GL1/beam/GL1_beam_gl1daq-00021372-0000.prdf", const char *outfile = "gl1_21372.root", const char *outfile2 = "trees2.root", const char *outfile3 = "trees3.root")
 {
   gSystem->Load("libg4dst");
   gSystem->Load("libgl1packetgetter");
@@ -30,6 +30,6 @@ R__LOAD_LIBRARY(libgl1packetgetter.so)
 
 // Fun4All
 
-  se->run(10);
+  se->run(100000);
   se->End();
 }

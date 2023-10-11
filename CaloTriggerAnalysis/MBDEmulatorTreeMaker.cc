@@ -59,7 +59,7 @@ int MBDEmulatorTreeMaker::Init(PHCompositeNode *topNode)
     {
       for (int j = 0; j < 4; j++)
 	{
-	  _tree_mbd->Branch(Form("trigger_charge_mbd_%d", i),&b_trigger_charge_mbd[j][i]);
+	  _tree_mbd->Branch(Form("trigger_charge_mbd_%d_%d", i, j),&b_trigger_charge_mbd[j][i]);
 	  // _tree_ll1->Branch(Form("trigger_charge_ll1_%d", i),&b_trigger_charge_ll1[j][i]);
 	}
     }
@@ -75,7 +75,7 @@ int MBDEmulatorTreeMaker::Init(PHCompositeNode *topNode)
     {
       for (int j = 0; j < 4; j++)
 	{
-	  _tree_mbd->Branch(Form("trigger_time_mbd_%d", i),&b_trigger_time_mbd[j][i]);
+	  _tree_mbd->Branch(Form("trigger_time_mbd_%d_%d", i, j),&b_trigger_time_mbd[j][i]);
 	  // _tree_ll1->Branch(Form("trigger_time_ll1_%d", i),&b_trigger_time_ll1[j][i]);
 	}
     }

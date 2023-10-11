@@ -32,6 +32,16 @@ pkginclude_HEADERS = \
 	WaveformContainerv1.h \
 	CaloWaveFormSim.h
 
+pkgdata_DATA = \
+	no_raddmgnoise.csv \
+	low_raddmgnoise.csv \
+	medium_raddmgnoise.csv \ 
+	high_raddmgnoise.csv \
+	testbeam_cemc_template.root \
+	testbeam_ihcal_template.root \
+	testbeam_ohcal_template.root \
+	laser_bbc_template.root 
+
 pcmdir = $(libdir)
 
 nobase_dist_pcm_DATA = \
