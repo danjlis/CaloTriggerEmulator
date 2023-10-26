@@ -41,8 +41,8 @@
 #include <phool/getClass.h>
 
 
-#include <bbc/BbcPmtContainerV1.h>
-#include <bbc/BbcPmtHitV1.h>
+#include <mbd/MbdPmtContainerV1.h>
+#include <mbd/MbdPmtHitV1.h>
 
 #include <TFile.h>
 #include <TNtuple.h>
@@ -59,7 +59,7 @@ class TProfile;
 TProfile *CaloWaveFormSim::h_template_emcal;
 TProfile *CaloWaveFormSim::h_template_ohcal;
 TProfile *CaloWaveFormSim::h_template_ihcal;
-TProfile *CaloWaveFormSim::h_template_bbc;
+TProfile *CaloWaveFormSim::h_template_mbd;
 
 
 using namespace std;
@@ -173,18 +173,18 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
       ohcalfilename = ohcalenv;
 
     }
-  const char *bbcenv = getenv("CALOWAVEFORMSIM_TEMPLATE_BBC");
-  std::string bbcfilename;
+  const char *mbdenv = getenv("CALOWAVEFORMSIM_TEMPLATE_BBC");
+  std::string mbdfilename;
   if (noiseenv == nullptr)
     {
       const char *offline_main = getenv("OFFLINE_MAIN");
       assert(offline_main);
-      bbcfilename = offline_main;
-      bbcfilename += "/share/calowaveformsim/laser_bbc_template.root";     
+      mbdfilename = offline_main;
+      mbdfilename += "/share/calowaveformsim/laser_mbd_template.root";     
     }
   else 
     {
-      bbcfilename = bbcenv;
+      mbdfilename = mbdenv;
     }
 
 
@@ -203,10 +203,10 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   assert(fin3->IsOpen());
   h_template_ohcal = static_cast<TProfile*>(fin3->Get("waveform_template"));
 
-  TFile* fin4 = TFile::Open(bbcfilename.c_str());
+  TFile* fin4 = TFile::Open(mbdfilename.c_str());
   assert(fin4);
   assert(fin4->IsOpen());
-  h_template_bbc = static_cast<TProfile*>(fin4->Get("waveform_template"));
+  h_template_mbd = static_cast<TProfile*>(fin4->Get("waveform_template"));
 
   light_collection_model.load_data_file(string(getenv("CALIBRATIONROOT")) + string("/CEMC/LightCollection/Prototype3Module.xml"),
 					"data_grid_light_guide_efficiency", "data_grid_fiber_trans");
@@ -225,16 +225,16 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
 
   for (int i = 0 ; i < 256;i++)
     {
-      for (int j = 0; j < _nsamples; j++) m_waveform_bbc[i].push_back(0.);
+      for (int j = 0; j < _nsamples; j++) m_waveform_mbd[i].push_back(0.);
     }
 
 
   return 0;
 }
 
-double CaloWaveFormSim::template_function_bbc(double *x, double *par)
+double CaloWaveFormSim::template_function_mbd(double *x, double *par)
 { 
-  return par[0]*h_template_bbc->Interpolate(x[0]-par[1])+par[2];
+  return par[0]*h_template_mbd->Interpolate(x[0]-par[1])+par[2];
 }
 
 double CaloWaveFormSim::template_function_cemc(double *x, double *par)
@@ -273,9 +273,9 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
   PHNodeIterator dstIter(dstNode);
 
   // Create nodes for CEMC
-  if (IsDetector("BBC"))
+  if (IsDetector("MBD"))
     {
-      PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "BBC"));
+      PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "MBD"));
       if (!detNode)
 	{
 	  std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
@@ -283,11 +283,11 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
 	  dstNode->addNode(detNode);
 	}
       
-      WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_BBC");
+      WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_MBD");
       if (!waveforms)
 	{
 	  waveforms = new WaveformContainerv1();
-	  PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_BBC", "PHObject");
+	  PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_MBD", "PHObject");
 	  detNode->addNode(waveformcontainerNode);
 	}
     }
@@ -447,11 +447,11 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       
     }
 
-  if (IsDetector("BBC"))
+  if (IsDetector("MBD"))
     {
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
-      waveforms_bbc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_BBC");
-      if (!waveforms_bbc)
+      waveforms_mbd = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_MBD");
+      if (!waveforms_mbd)
 	{
 	  std::cout << "Waveforms not found - Fatal Error" << std::endl;
 	  exit(1);
@@ -459,10 +459,10 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
 
-      _bbcpmts = findNode::getClass<BbcPmtContainer>(topNode, "BbcPmtContainer");
-      if (!_bbcpmts)
+      _mbdpmts = findNode::getClass<MbdPmtContainer>(topNode, "MbdPmtContainer");
+      if (!_mbdpmts)
 	{
-	  std::cout << "bbc pmts not found - Fatal Error" << std::endl;
+	  std::cout << "mbd pmts not found - Fatal Error" << std::endl;
 	  exit(1);
 	}
       
@@ -484,8 +484,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
   for (int i = 0 ; i < 256;i++)
     {
-      m_waveform_bbc[i].clear();
-      for (int j = 0; j < _nsamples; j++) m_waveform_bbc[i].push_back(0.);
+      m_waveform_mbd[i].clear();
+      for (int j = 0; j < _nsamples; j++) m_waveform_mbd[i].push_back(0.);
     }
 
   
@@ -494,8 +494,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   //for use in waveform generation
   //---------------------------------------------------------
 
-  TF1 *f_fit_bbc = new TF1("f_fit_bbc",template_function_bbc,0,31,3);
-  f_fit_bbc->SetParameters(1,0,0);
+  TF1 *f_fit_mbd = new TF1("f_fit_mbd",template_function_mbd,0,31,3);
+  f_fit_mbd->SetParameters(1,0,0);
 
   TF1 *f_fit_cemc = new TF1("f_fit_cemc",template_function_cemc,0,31,3);
   f_fit_cemc->SetParameters(1,0,0);
@@ -511,8 +511,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   //signal peak to be 4 time samples into
   //the waveform
   //------------------------------------------------------
-  float _shiftval_bbc = 4-f_fit_bbc->GetMaximumX();
-  f_fit_bbc->SetParameters(1,_shiftval_bbc,0);
+  float _shiftval_mbd = 4-f_fit_mbd->GetMaximumX();
+  f_fit_mbd->SetParameters(1,_shiftval_mbd,0);
 
   float _shiftval_cemc = 4-f_fit_cemc->GetMaximumX();
   f_fit_cemc->SetParameters(1,_shiftval_cemc,0);
@@ -772,40 +772,40 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	}
     }
   
-  if (IsDetector("BBC"))
+  if (IsDetector("MBD"))
     {
       //---------------------------------------------------------------------
       // Get PMT charges
       //---------------------------------------------------------------------
       
       int ich;
-      int npmt = _bbcpmts->get_npmt();
+      int npmt = _mbdpmts->get_npmt();
 
       for (ich = 0; ich < npmt ; ich++)
 	{
-	  short ipmt = _bbcpmts->get_pmt( ich);
-
+	  MbdPmtHit *tmp_pmt = _mbdpmts->get_pmt( ich);
+	  int ipmt = ich;
 	  int ipmtq = 32 + ((ipmt/32)*64) + (ipmt%32);
 	  int ipmtt = ((ipmt/32)*64) + (ipmt%32);
 
-	  float adc  = _bbcpmts->get_adc( ich)*70;
+	  float adc  = tmp_pmt->get_q()*70;
 
-	  float tdc0 = _bbcpmts->get_tdc0(ich);
+	  float tdc0 = tmp_pmt->get_time();
 	  float tdc0_dig = 13000.* (1 - (1./22.5)*(tdc0 - 2.5));
 	  float t0 = (tdc0) / 16.66667;   //Place waveform at the starting time of the G4hit, avoids issues caused by excessively long lived g4hits
 
-	  f_fit_bbc->SetParameters(adc,_shiftval_bbc+t0,0);            //Set the wavefor
+	  f_fit_mbd->SetParameters(adc,_shiftval_mbd+t0,0);            //Set the wavefor
 	  
 	  for (int j = 0; j < 16;j++) // 16 is the number of time samples
 	    {
-	      m_waveform_bbc[ipmtq][j] += f_fit_bbc->Eval(j);
+	      m_waveform_mbd[ipmtq][j] += f_fit_mbd->Eval(j);
 	    }
 	    
-	  f_fit_bbc->SetParameters(tdc0_dig,_shiftval_bbc+t0,0);            //Set the wavefor
+	  f_fit_mbd->SetParameters(tdc0_dig,_shiftval_mbd+t0,0);            //Set the wavefor
 
 	  for (int j = 0; j < 16;j++) // 16 is the number of time samples
 	    {
-	      m_waveform_bbc[ipmtt][j] += f_fit_bbc->Eval(j);
+	      m_waveform_mbd[ipmtt][j] += f_fit_mbd->Eval(j);
 	    }
 
 	}
@@ -879,7 +879,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	}
     }
 
-  if (IsDetector("BBC"))
+  if (IsDetector("MBD"))
     {
       for (int i = 0; i < 256;i++)
 	{
@@ -891,10 +891,10 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       
 	  for (int k = 0; k < 16;k++)
 	    {
-	      m_waveform_bbc[i][k] = m_waveform_bbc[i][k]+(noise_val[k]-1500)/16.0+1500;
-	      wave->push_back(static_cast<int>(m_waveform_bbc[i][k]));
+	      m_waveform_mbd[i][k] = m_waveform_mbd[i][k]+(noise_val[k]-1500)/16.0+1500;
+	      wave->push_back(static_cast<int>(m_waveform_mbd[i][k]));
 	    }
-	  waveforms_bbc->set_waveform_at_channel(i, wave);
+	  waveforms_mbd->set_waveform_at_channel(i, wave);
 	}
     }
 

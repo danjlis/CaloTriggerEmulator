@@ -22,7 +22,7 @@ libcalowaveformsim_la_LIBADD = \
 	-lg4detectors \
 	-lsph_onnx \
 	-lcalo_reco \
-	-lbbc_io \
+	-lmbd_io \
 	-lphg4hit
 
 pkginclude_HEADERS = \
@@ -40,7 +40,7 @@ pkgdata_DATA = \
 	testbeam_cemc_template.root \
 	testbeam_ihcal_template.root \
 	testbeam_ohcal_template.root \
-	laser_bbc_template.root 
+	laser_mbd_template.root 
 
 pcmdir = $(libdir)
 

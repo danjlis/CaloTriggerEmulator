@@ -1,8 +1,8 @@
 #ifndef CALOWAVEFORMSIM_H__
 #define CALOWAVEFORMSIM_H__
 #include "g4detectors/PHG4CylinderCellGeomContainer.h"
-#include <bbc/BbcPmtContainer.h>
-#include <bbc/BbcPmtHit.h>
+#include <mbd/MbdPmtContainer.h>
+#include <mbd/MbdPmtHit.h>
 #include <fun4all/SubsysReco.h>
 #include <TTree.h>
 #include <TProfile.h>
@@ -60,9 +60,9 @@ class CaloWaveFormSim : public SubsysReco
   std::vector<float> m_waveform_cemc[24576];
   std::vector<float> m_waveform_ihcal[1536];
   std::vector<float> m_waveform_ohcal[1536];
-  std::vector<float> m_waveform_bbc[256];
+  std::vector<float> m_waveform_mbd[256];
   
-  static TProfile* h_template_bbc;
+  static TProfile* h_template_mbd;
   static TProfile* h_template_emcal;
   static TProfile* h_template_ihcal;
   static TProfile* h_template_ohcal;
@@ -95,7 +95,7 @@ class CaloWaveFormSim : public SubsysReco
   int ROWDIM = 320;
   int COLUMNDIM = 27;
  
-  static double template_function_bbc(double *x, double *par);
+  static double template_function_mbd(double *x, double *par);
   static double template_function_cemc(double *x, double *par);
   static double template_function_ihcal(double *x, double *par);
   static double template_function_ohcal(double *x, double *par);
@@ -105,7 +105,7 @@ class CaloWaveFormSim : public SubsysReco
   WaveformContainerv1 *waveforms_cemc;
   WaveformContainerv1 *waveforms_hcalout;
   WaveformContainerv1 *waveforms_hcalin;
-  WaveformContainerv1 *waveforms_bbc;
+  WaveformContainerv1 *waveforms_mbd;
   PHG4CylinderGeomContainer *_layergeo;
   PHG4CylinderCellGeomContainer *_seggeo;
   PHG4HitContainer *_hits_cemc;
@@ -113,7 +113,7 @@ class CaloWaveFormSim : public SubsysReco
   PHG4CellContainer *_slats_ohcal;
   TowerInfoContainerv1 *_raw_towers_ohcal;
 
-  BbcPmtContainer *_bbcpmts;
+  MbdPmtContainer *_mbdpmts;
 };
 
 #endif
