@@ -10,10 +10,10 @@
 
 #include <g4main/PHG4Hit.h>
 #include <g4main/PHG4HitContainer.h>
-#include <bbc/BbcPmtHit.h>
-#include <bbc/BbcPmtContainer.h>
-#include <bbc/BbcVertexMap.h>
-#include <bbc/BbcVertex.h>
+#include <mbd/MbdPmtHit.h>
+#include <mbd/MbdPmtContainer.h>
+#include <mbd/MbdVertexMap.h>
+#include <mbd/MbdVertex.h>
 #include "g4detectors/PHG4CylinderGeomContainer.h"
 #include "g4detectors/PHG4CylinderGeom_Spacalv1.h"  // for PHG4CylinderGeom_Spaca...
 #include "g4detectors/PHG4CylinderGeom_Spacalv3.h"
@@ -75,7 +75,7 @@ class TrigTreeMaker : public SubsysReco
   WaveformContainerv1 *_waveforms_hcalout;
   WaveformContainerv1 *_waveforms_bbc;
   LL1Outv1 *_ll1_mbd;
-  BbcVertexMap *_bbcvertexmap;
+  MbdVertexMap *_bbcvertexmap;
 
   PHG4TruthInfoContainer* _truthinfo;
   PHG4HitContainer* _hits_cemc;
@@ -83,7 +83,7 @@ class TrigTreeMaker : public SubsysReco
   PHG4CylinderCellGeomContainer *_seggeo; 
   PHG4HitContainer* _hits_hcalin;
   PHG4HitContainer* _hits_hcalout;
-  BbcPmtContainer* _bbc_pmts;
+  MbdPmtContainer* _bbc_pmts;
 
   int m_waveforms_cemc[24576][16];
   int m_waveforms_hcalin[1536][16];

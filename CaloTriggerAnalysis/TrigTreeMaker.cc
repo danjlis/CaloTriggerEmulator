@@ -178,7 +178,7 @@ void TrigTreeMaker::GetNodes(PHCompositeNode* topNode)
       exit(1);
     }
 
-  _waveforms_bbc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_BBC");
+  _waveforms_bbc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_MBD");
 
   if (!_waveforms_bbc) 
     {
@@ -228,10 +228,10 @@ void TrigTreeMaker::GetNodes(PHCompositeNode* topNode)
       exit(1);
     }
 
-  _bbc_pmts = findNode::getClass<BbcPmtContainer>(topNode, "BbcPmtContainer");
+  _bbc_pmts = findNode::getClass<MbdPmtContainer>(topNode, "MbdPmtContainer");
   if (!_bbc_pmts) 
     {
-      std::cout << "BBC Pmt Container not found" << std::endl;
+      std::cout << "MBD Pmt Container not found" << std::endl;
       exit(1);
     }
 
@@ -243,10 +243,10 @@ void TrigTreeMaker::GetNodes(PHCompositeNode* topNode)
       exit(1);
     }
 
-  _bbcvertexmap = findNode::getClass<BbcVertexMap>(topNode, "BbcVertexMap");
+  _bbcvertexmap = findNode::getClass<MbdVertexMap>(topNode, "MbdVertexMap");
   if (!_bbcvertexmap)
     {
-      std::cout << "No BBC Vertex node... " << std::endl;
+      std::cout << "No MBD Vertex node... " << std::endl;
       exit(1);
     }
   return;
@@ -545,7 +545,7 @@ void TrigTreeMaker::process_truth()
 	  BbcVertex *v = (*it).second;
 	  m_bbc_vtx_z = v->get_z();
 	  m_bbc_vtx_t0 = v->get_t();
-	  m_bbc_vtx_n++;
+	  m_bbcn_vtx_n++;
 	}
     }
   return;
