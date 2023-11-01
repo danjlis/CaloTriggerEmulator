@@ -517,10 +517,11 @@ void TrigTreeMaker::process_truth()
 
       for (ich = 0; ich < m_npmt ; ich++)
         {
-          short ipmt = _bbc_pmts->get_pmt( ich);
-          float adc  = _bbc_pmts->get_adc( ich);
-          float tdc0 = _bbc_pmts->get_tdc0(ich);
-          float tdc1 = _bbc_pmts->get_tdc1(ich);
+	  short ipmt = ich;
+          MbdPmtHit *pmt = _bbc_pmts->get_pmt( ich);
+          float adc  = pmt->get_q();
+          float tdc0 = pmt->get_time();
+          float tdc1 = pmt->get_tt();
 
 	  m_adc_bbc[ipmt] = adc;
 	  m_tdc0_bbc[ipmt] = tdc0;
@@ -542,10 +543,10 @@ void TrigTreeMaker::process_truth()
       m_bbc_vtx_n = 0;
       for (auto it = _bbcvertexmap->begin(); it != _bbcvertexmap->end(); ++it)
 	{
-	  BbcVertex *v = (*it).second;
+	  MbdVertex *v = (*it).second;
 	  m_bbc_vtx_z = v->get_z();
 	  m_bbc_vtx_t0 = v->get_t();
-	  m_bbcn_vtx_n++;
+	  m_bbc_vtx_n++;
 	}
     }
   return;
