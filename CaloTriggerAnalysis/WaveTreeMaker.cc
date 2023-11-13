@@ -50,11 +50,15 @@ int WaveTreeMaker::Init(PHCompositeNode *topNode)
   
   _tree = new TTree("ttree","a persevering date tree");
 
+  _tree->Branch("evtnr", &m_evtnr,"evtnr/i");
+  _tree->Branch("clk", &m_clk,"clk/i");
+  _tree->Branch("femevtnr", &m_femevtnr,"femevtnr/i");
+  _tree->Branch("femclk", &m_femclk,"femclk/i");
   _tree->Branch("waveform_emcal",&m_waveforms_cemc,"waveform_emcal[24576][31]/I");
   _tree->Branch("waveform_ihcal",&m_waveforms_hcalin,"waveform_ihcal[1536][31]/I");
   _tree->Branch("waveform_ohcal",&m_waveforms_hcalout,"waveform_ohcal[1536][31]/I");
   _tree->Branch("waveform_bbc",&m_waveforms_bbc,"waveform_bbc[256][31]/I");
-
+  _tree->Branch("waveform_zdc",&m_waveforms_zdc,"waveform_zdc[16][31]/I");
   _i_event = 0;
 
   return Fun4AllReturnCodes::EVENT_OK;
@@ -75,6 +79,12 @@ void WaveTreeMaker::SetVerbosity(int verbo){
 
 void WaveTreeMaker::reset_tree_vars()
 {
+  m_evtnr = 0;
+  m_clk = 0;
+  m_femevtnr = 0;
+  m_femclk = 0;
+
+
   for (int i = 0; i < 24576; i++)
     {
 
@@ -90,6 +100,10 @@ void WaveTreeMaker::reset_tree_vars()
   for (int i = 0; i < 128; i++)
     {
       for (int j = 0; j < 31; j++) m_waveforms_bbc[i][j] = 0;
+    }
+  for (int i = 0; i < 16; i++)
+    {
+      for (int j = 0; j < 31; j++) m_waveforms_zdc[i][j] = 0;
     }
 
 
@@ -111,6 +125,8 @@ void WaveTreeMaker::GetNodes(PHCompositeNode* topNode)
 
 
   _waveforms_bbc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_MBD");
+
+  _waveforms_zdc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_ZDC");
 
 
   return;
@@ -177,16 +193,50 @@ void WaveTreeMaker::process_waveforms()
 	}
     }
 
+  if (_waveforms_zdc)
+    {
+
+      int ich = 0;
+
+      WaveformContainerv1::RangeInfo begin_end_info;
+      WaveformContainerv1::IterInfo iinfo;
+
+      begin_end_info = _waveforms_zdc->get_packet_events();
+      iinfo = begin_end_info.first;
+      m_evtnr = iinfo->second;
+      begin_end_info = _waveforms_zdc->get_packet_clocks();
+      iinfo = begin_end_info.first;
+      m_clk = iinfo->second;
+      begin_end_info = _waveforms_zdc->get_fem_events();
+      iinfo = begin_end_info.first;
+      m_femevtnr = iinfo->second;
+      begin_end_info = _waveforms_zdc->get_fem_clocks();
+      iinfo = begin_end_info.first;
+      m_femclk = iinfo->second;
+
+
+      WaveformContainerv1::Range begin_end = _waveforms_zdc->getWaveforms();
+      WaveformContainerv1::Iter iwave = begin_end.first;
+
+
+      for (; iwave != begin_end.second; ++iwave)
+	{
+
+	  std::vector<int> wave = *(iwave->second);
+	  
+	  for (int i = 0; i < 31; i++)
+	    {
+	      m_waveforms_zdc[ich][i] = wave.at(i);
+	    }
+	  ich++;
+	}
+    }
+
 }
 
 int WaveTreeMaker::process_event(PHCompositeNode *topNode)
 {
   _i_event++;
-  if (_i_event%((_verbosity > 0)? 1: 100)== 0) {
-    std::cout<<"------------------------------------------------"<<std::endl;
-    std::cout<<"Event "<<_i_event<<std::endl;
-    std::cout<<"------------------------------------------------"<<std::endl;
-  }
   GetNodes(topNode);
   reset_tree_vars();
   process_waveforms();

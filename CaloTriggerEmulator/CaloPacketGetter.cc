@@ -30,6 +30,7 @@ CaloPacketGetter::CaloPacketGetter(const std::string &name, const std::string &d
 {
   m_detectors["CEMC"] = DetectorSystem::CEMC;
   m_detectors["MBD"] = DetectorSystem::MBD;
+  m_detectors["ZDC"] = DetectorSystem::ZDC;
   m_detectors["HCALIN"] = DetectorSystem::HCALIN;
   m_detectors["HCALOUT"] = DetectorSystem::HCALOUT;
   m_detectors["SEPD"] = DetectorSystem::SEPD;
@@ -77,12 +78,18 @@ int CaloPacketGetter::InitRun(PHCompositeNode *topNode)
       m_nchannels = 256;
 
       break;
-
     case DetectorSystem::MBD:
       std::cout <<"MBD Packet Getter"<<std::endl;
       m_packet_low = 1001;
       m_packet_high = 1002;
       m_nchannels = 128;
+
+      break;
+    case DetectorSystem::ZDC:
+      std::cout <<"ZDC Packet Getter"<<std::endl;
+      m_packet_low = 12001;
+      m_packet_high = 12001;
+      m_nchannels = 16;
 
       break;
 
@@ -154,11 +161,20 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	}
       break;
     }
-
+ case DetectorSystem::ZDC:
+    {
+      
+      m_WaveformContainer = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_ZDC");
+      if (!m_WaveformContainer)
+	{
+	  std::cout << "ZDC Waveforms not found - Fatal Error" << std::endl;
+	  exit(1);
+	}
+      break;
+    }
+ 
   }
   unsigned int key;
-  std::vector<unsigned int> keys;
-  std::vector<std::vector<int>> waveforms;
   unsigned int clk;
   unsigned int evt;
   unsigned int nmod;
@@ -200,50 +216,28 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 	    }
 
 	  int nchannels = packet->iValue(0, "CHANNELS");
+	  
 	  if (nchannels > m_nchannels) // packet is corrupted and reports too many channels
 	    {
-	      return Fun4AllReturnCodes::DISCARDEVENT;
+	      nchannels = m_nchannels;
 	    }
 	  for (int channel = 0; channel < nchannels; channel++)
 	    {
 	      //	      std::cout << "Channel "<<channel<< " : ";
-	      std::vector<int> waveform;
+	      std::vector<int> *waveform = new std::vector<int>();
 	      key = 0;
 	      key |= (pid << 16);
 	      key |= channel;
-	      keys.push_back(key);
-	      waveform.reserve(m_nsamples);
+	      waveform->reserve(m_nsamples);
 	      for (int samp = 0; samp < m_nsamples; samp++)
 		{
-		  waveform.push_back(packet->iValue(samp, channel));
+		  waveform->push_back(packet->iValue(samp, channel));
 		  //  std::cout << " "<< waveform[samp];
 		}
 	      //	      std::cout << " "<<std::endl;
-	      waveforms.push_back(waveform);
-	      waveform.clear();
+	      m_WaveformContainer->set_waveform_at_key(key, waveform);
 	    }
 	  delete packet;
-	}
-      else // if the packet is missing treat constitutent channels as zero suppressed 
-	{
-	  for (int channel = 0; channel < m_nchannels; channel++)
-	    {
-	      std::vector<int> waveform;
-	      key = 0;
-	      key |= (pid << 16);
-	      key |= channel;
-	      keys.push_back(key);
-	      waveform.reserve(m_nsamples);
-	      for (int samp = 0; samp < m_nsamples; samp++)
-		{
-
-		  waveform.push_back(1500);
-
-		}
-	      waveforms.push_back(waveform);
-	      waveform.clear();
-	    }
-
 	}
     }
   }
@@ -252,30 +246,6 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
     return Fun4AllReturnCodes::EVENT_OK;
   }
   
-  int iwave = 0;
-  for (auto it = waveforms.begin(); it != waveforms.end(); it++)
-    {
-      std::vector<int> *wave = new std::vector<int>();
-      wave->clear();
-
-      //      std::cout << "After "<<iwave<< " : ";
-	    
-         
-      for (int k = 0; k < m_nsamples;k++)
-	{
-	  wave->push_back(waveforms[iwave][k]);
-
-	  //  std::cout << " "<< wave->at(k);
-	}
-
-      //      std::cout << " "<<std::endl;
-	
-      m_WaveformContainer->set_waveform_at_key(keys[iwave], wave);
-      iwave++;
-    }
-
-  waveforms.clear();
-
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -391,6 +361,26 @@ void CaloPacketGetter::CreateNodeTree(PHCompositeNode *topNode)
 	  {
 	    waveforms = new WaveformContainerv1();
 	    PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_MBD", "PHObject");
+	    detNode->addNode(waveformcontainerNode);
+	  }
+	
+	break;
+      }
+    case DetectorSystem::ZDC:
+      {
+	PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "ZDC"));
+	if (!detNode)
+	  {
+	    std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
+	    detNode = new PHCompositeNode("ZDC");
+	    dst_node->addNode(detNode);
+	  }
+	
+	WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_ZDC");
+	if (!waveforms)
+	  {
+	    waveforms = new WaveformContainerv1();
+	    PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_ZDC", "PHObject");
 	    detNode->addNode(waveformcontainerNode);
 	  }
 	

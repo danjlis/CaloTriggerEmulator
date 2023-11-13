@@ -59,11 +59,19 @@ class WaveTreeMaker : public SubsysReco
   WaveformContainerv1 *_waveforms_hcalin;
   WaveformContainerv1 *_waveforms_hcalout;
   WaveformContainerv1 *_waveforms_bbc;
+  WaveformContainerv1 *_waveforms_zdc;
+
+
+  unsigned int m_evtnr;
+  unsigned int m_clk;
+  unsigned int m_femevtnr;
+  unsigned int m_femclk;
 
   int m_waveforms_cemc[24576][31];
   int m_waveforms_hcalin[1536][31];
   int m_waveforms_hcalout[1536][31];
   int m_waveforms_bbc[256][31];
+  int m_waveforms_zdc[16][31];
 
   int ROWDIM = 320;
   int COLUMNDIM = 27;

@@ -12,8 +12,8 @@
 #include <g4main/PHG4HitContainer.h>
 #include <mbd/MbdPmtHit.h>
 #include <mbd/MbdPmtContainer.h>
-#include <mbd/MbdVertexMap.h>
-#include <mbd/MbdVertex.h>
+#include <globalvertex/MbdVertexMap.h>
+#include <globalvertex/MbdVertex.h>
 #include "g4detectors/PHG4CylinderGeomContainer.h"
 #include "g4detectors/PHG4CylinderGeom_Spacalv1.h"  // for PHG4CylinderGeom_Spaca...
 #include "g4detectors/PHG4CylinderGeom_Spacalv3.h"
