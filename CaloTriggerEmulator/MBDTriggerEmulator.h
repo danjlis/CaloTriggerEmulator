@@ -22,25 +22,25 @@ class MBDTriggerEmulator : public SubsysReco
 {
  public:
   //! constructor
-  MBDTriggerEmulator(const std::string &name = "MBDTriggerEmulator", const std::string &fname = "MyNtuple.root");
+  MBDTriggerEmulator(const std::string &name = "MBDTriggerEmulator");
 
   //! destructor
   virtual ~MBDTriggerEmulator();
 
   //! full initialization
-  int Init(PHCompositeNode *);
+  int Init(PHCompositeNode *) override;
 
   //! full initialization
-  int InitRun(PHCompositeNode *);
+  int InitRun(PHCompositeNode *) override;
 
   //! event processing method
-  int process_event(PHCompositeNode *);
+  int process_event(PHCompositeNode *) override;
 
   //! end of run method
-  int End(PHCompositeNode *);
+  int End(PHCompositeNode *) override;
 
   //! reset variables
-  void reset_vars();
+  int ResetEvent(PHCompositeNode *) override;
 
   //! Get Nodes
   void GetNodes(PHCompositeNode *);
@@ -61,10 +61,9 @@ class MBDTriggerEmulator : public SubsysReco
 
   void Verbosity(const int verbosity) { _verbose = verbosity; }
 
+  void SetNSamples(const int ns) { m_nsamples = ns;}
+
  protected:
-  std::string outfilename;
-  Fun4AllHistoManager *hm;
-  TFile *outfile;
 
   //!Trigger Type
   std::string _trigger;
@@ -105,6 +104,8 @@ class MBDTriggerEmulator : public SubsysReco
 
   int m_isdata;
   int m_nsamples;
+  int m_trig_sub_delay;
+  int m_trig_sample_phase;
   int m_packet_low, m_packet_high;
 
   Event *_event;

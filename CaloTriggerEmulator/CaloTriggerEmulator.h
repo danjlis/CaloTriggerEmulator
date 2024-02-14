@@ -28,25 +28,25 @@ class CaloTriggerEmulator : public SubsysReco
 {
  public:
   //! constructor
-  CaloTriggerEmulator(const std::string &name = "CaloTriggerEmulator", const std::string &fname = "MyNtuple.root");
+  CaloTriggerEmulator(const std::string& name, const std::string& filename);
 
   //! destructor
-  virtual ~CaloTriggerEmulator();
+  virtual ~CaloTriggerEmulator() override;
 
   //! full initialization
-  int Init(PHCompositeNode *);
+  int Init(PHCompositeNode *) override;
 
   //! full initialization
-  int InitRun(PHCompositeNode *);
+  int InitRun(PHCompositeNode *) override;
 
   //! event processing method
-  int process_event(PHCompositeNode *);
+  int process_event(PHCompositeNode *) override;
 
   //! end of run method
-  int End(PHCompositeNode *);
+  int End(PHCompositeNode *) override;
 
   //! reset variables
-  void reset_vars();
+  int  ResetEvent(PHCompositeNode *) override ;
 
   //! Get Nodes
   void GetNodes(PHCompositeNode *);
@@ -87,13 +87,13 @@ class CaloTriggerEmulator : public SubsysReco
 
   bool _do_hcalin;
   bool _do_hcalout;
-  bool _do_cemc;
+  bool _do_emcal;
   bool _do_mbd;
 
   //! Waveform conatiner
   WaveformContainerv1 *_waveforms_hcalin;
   WaveformContainerv1 *_waveforms_hcalout;
-  WaveformContainerv1 *_waveforms_cemc;
+  WaveformContainerv1 *_waveforms_emcal;
   WaveformContainerv1 *_waveforms_mbd;
 
   //! LL1 Out
@@ -106,8 +106,8 @@ class CaloTriggerEmulator : public SubsysReco
   LL1Outv2 *_ll1out_hcalout;
   TriggerPrimitiveContainerv1 *_primitives_hcalout;
 
-  LL1Outv2 *_ll1out_cemc;
-  TriggerPrimitiveContainerv1 *_primitives_cemc;
+  LL1Outv2 *_ll1out_emcal;
+  TriggerPrimitiveContainerv1 *_primitives_emcal;
 
   TriggerPrimitive *_primitive;
   std::vector<unsigned int> *_sum;
@@ -121,10 +121,10 @@ class CaloTriggerEmulator : public SubsysReco
   TH1D *h_mbd_time;
   TH1D *h_mbd_charge;
 
-  std::vector<TProfile*> v_avg_primitive_cemc;
-  std::vector<TH2D*> v_peak_primitive_cemc;
-  std::vector<TH2D*> v_primitives_cemc;
-  std::vector<TH2D*> v_trigger_fire_map_cemc;
+  std::vector<TProfile*> v_avg_primitive_emcal;
+  std::vector<TH2D*> v_peak_primitive_emcal;
+  std::vector<TH2D*> v_primitives_emcal;
+  std::vector<TH2D*> v_trigger_fire_map_emcal;
 
   std::vector<TProfile*> v_avg_primitive_hcalin;
   std::vector<TH2D*> v_peak_primitive_hcalin;
@@ -173,7 +173,7 @@ class CaloTriggerEmulator : public SubsysReco
   unsigned int m_nhit1, m_nhit2, m_timediff1, m_timediff2, m_timediff3;
 
 
-  std::map<int, std::vector<int>*> m_peak_sub_ped_cemc;
+  std::map<int, std::vector<int>*> m_peak_sub_ped_emcal;
   std::map<int, std::vector<int>*> m_peak_sub_ped_mbd;
   std::map<int, std::vector<int>*> m_peak_sub_ped_hcalin;
   std::map<int, std::vector<int>*> m_peak_sub_ped_hcalout;

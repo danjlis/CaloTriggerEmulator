@@ -31,7 +31,7 @@ LL1PacketGetter::LL1PacketGetter(const std::string &name, const std::string &tri
 {
 
   m_prim_map[TriggerDefs::DetectorId::noneDId] = 0;
-  m_prim_map[TriggerDefs::DetectorId::cemcDId] = 384;
+  m_prim_map[TriggerDefs::DetectorId::emcalDId] = 384;
   m_prim_map[TriggerDefs::DetectorId::hcalinDId] = 24;
   m_prim_map[TriggerDefs::DetectorId::hcaloutDId] = 24;
   m_prim_map[TriggerDefs::DetectorId::mbdDId] = 4;

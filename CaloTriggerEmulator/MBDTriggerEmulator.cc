@@ -1,6 +1,5 @@
 #include "MBDTriggerEmulator.h"
 
-#include <fun4all/Fun4AllHistoManager.h>
 #include <fun4all/Fun4AllReturnCodes.h>
 
 #include <phool/getClass.h>
@@ -26,23 +25,26 @@
 
 using namespace std;
 
-MBDTriggerEmulator::MBDTriggerEmulator(const std::string& name, const std::string& filename)
+// destructor
+MBDTriggerEmulator::MBDTriggerEmulator(const std::string& name)
   : SubsysReco(name)
-  , outfilename(filename)
-  , hm(nullptr)
-  , outfile(nullptr)
 {
 
   _verbose = 0;
   _trigger = "NONE";
   _nevent = 0;
 
+  // basic threshold setting
   m_nhit1 = 2;
   m_nhit2 = 5;
   m_timediff1 = 10;
   m_timediff2 = 20; 
   m_timediff3 = 30;
 
+  m_nsamples = 31;
+  m_trig_sub_delay = 3;
+  m_trig_sample_phase = 3;
+  // default lookuptables
   for (unsigned int i = 0; i < 1024; i++)
     {
       m_l1_adc_table[i] = (i) & 0x3ff;
@@ -54,25 +56,27 @@ MBDTriggerEmulator::MBDTriggerEmulator(const std::string& name, const std::strin
     }
 }
 
+
+// destructor
 MBDTriggerEmulator::~MBDTriggerEmulator()
 {
-  delete hm;
+
 }
 
-int MBDTriggerEmulator::Init(PHCompositeNode* topNode)
+// tree and hist output files
+int MBDTriggerEmulator::Init(PHCompositeNode*  /* topNode */)
 {
-  hm = new Fun4AllHistoManager(Name());
-  outfile = new TFile(outfilename.c_str(), "RECREATE");
   if (_verbose) std::cout << __FUNCTION__ << std::endl;
   return 0;
 }
 
-int MBDTriggerEmulator::InitRun(PHCompositeNode* topNode)
+int MBDTriggerEmulator::InitRun(PHCompositeNode* topNode )
 {
   if (_verbose) std::cout << __FUNCTION__ << std::endl;
   CreateNodes(topNode);
   return 0;
 }
+
 int MBDTriggerEmulator::process_event(PHCompositeNode* topNode)
 {
 
@@ -80,10 +84,12 @@ int MBDTriggerEmulator::process_event(PHCompositeNode* topNode)
 
   GetNodes(topNode);
 
-  reset_vars();
-
+  // reates the peak - pedestal for all samples of data
+  
   process_waveforms();
   
+  // make primitives from the peak - pedestal
+
   process_primitives();
     
   _nevent++;
@@ -93,7 +99,7 @@ int MBDTriggerEmulator::process_event(PHCompositeNode* topNode)
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
-void MBDTriggerEmulator::reset_vars()
+int MBDTriggerEmulator::ResetEvent(PHCompositeNode* /* topNode */)
 {
   for (int i = 0; i < 256; i++)
     {
@@ -132,7 +138,7 @@ void MBDTriggerEmulator::reset_vars()
 
   m_trigger_word = 0;
 
-  
+  return 0;
 }
 
 int MBDTriggerEmulator::process_waveforms()
@@ -142,6 +148,7 @@ int MBDTriggerEmulator::process_waveforms()
 
   WaveformContainerv1::Range begin_end = _waveforms_mbd->getWaveforms();
   WaveformContainerv1::Iter iwave = begin_end.first;
+
   int j = 0;
 
   for (; iwave != begin_end.second; ++iwave)
@@ -152,9 +159,9 @@ int MBDTriggerEmulator::process_waveforms()
 	  m_waveforms_mbd[iwave->first][i] = static_cast<int>(wave.at(i));
 	  if (m_waveforms_mbd[iwave->first][i] > (0x3fff)) m_waveforms_mbd[iwave->first][i] = 0x3fff;
 	}
-      for (int i = 0; i < m_nsamples - 6;i++)
+      for (int i = 0; i < m_nsamples - (m_trig_sub_delay + 1) ; i++)
 	{
-	  m_peak_sub_ped[iwave->first][i] = m_waveforms_mbd[iwave->first][5 + i] - m_waveforms_mbd[iwave->first][i];
+	  m_peak_sub_ped[iwave->first][i] = m_waveforms_mbd[iwave->first][m_trig_sub_delay + i] - m_waveforms_mbd[iwave->first][i];
 	  if (m_peak_sub_ped[iwave->first][i] < 0) m_peak_sub_ped[iwave->first][i] = 0;
 	  if (_verbose > 3)
 	    {
@@ -185,63 +192,83 @@ int MBDTriggerEmulator::process_primitives()
 
   unsigned int i, j, is;
 
-  for (is = 0; is < 25; is++)
+  // calculate for every pair of peak - pedestal samples
+  for (is = 0; is < (unsigned int) (m_nsamples - (m_trig_sub_delay + 1)); is++)
     {
+      // loop over 4 boards
       for (i = 0; i < 4; i++)
 	{
 	  unsigned int tmp, tmp2;  
 	  unsigned int qadd[32];
 	  if (_verbose > 3) std::cout << "i: "<<i<<": "<<std::endl;
-	  
+
+	  // there are 4 sections of 8 time then 8 charge channels in each board
 	  for (int isec = 0; isec < 4; isec++)
 	    {
+	      // for each charge channel in the section
 	      for (j = 0; j < 8;j++)
 		{
+
+		  // pass the top 10 bits of signal to lookup table to get 10 bits out.
 		  tmp = m_l1_adc_table[m_peak_sub_ped[ i*64 + 8 + isec*16 + j ][is] >> 4];
 		  
-		  qadd[j] = (tmp & 0x380) >> 7;
-		  
-		  m_trig_charge[i][j/4] += tmp & 0x7ff;
+		  // Get the top 3 bits of the charge for the slewing.
+		  qadd[isec*8 + j] = (tmp & 0x380) >> 7;
+
+		  // add to the cahrge sum that is sent to LL1
+		  m_trig_charge[i][isec*2 + j/4] += tmp & 0x7ff;
 		  
 		}
-	    }
+	      
+	    }	      
+	  // set number of hits for this board to 0
 	  m_trig_nhit[i] = 0;
-	  
-	  for (j = 0; j < 8;j++)
-	    {
-	      tmp = m_l1_adc_table[m_peak_sub_ped[ i*64 + j ][is] >> 4];
-	      
-	      m_trig_nhit[i] += (tmp & 0x200) >> 9;
-	      
-	      tmp2 = m_l1_slewing_table[(qadd[j] << 9) + (tmp & 0x01ff)];
-	      
-	      m_trig_time[i][j/8] += tmp2;
-	      if (_verbose > 3) std::cout << i*64 + j <<" : "<<(m_peak_sub_ped[ i*64 + j ][is] >> 4)<<" : "<< tmp <<" : "<< tmp2 <<" : "<<((tmp&0x200) >> 9)<< std::endl;
+
+	  for (int isec = 0; isec < 4; isec++)
+	    { 
+	      for (j = 0; j < 8;j++)
+		{
+		  // get 10 bit number from top 10 bits of time
+		  tmp = m_l1_adc_table[m_peak_sub_ped[ i*64 + isec*16 + j ][is] >> 4];
+		  
+		  // The 10th bit is the hit bit
+		  m_trig_nhit[i] += (tmp & 0x200) >> 9;
+		  
+		  // into the slewing table is top 3 bits in top 9-11 bits and the bottom 8-0 of the time.
+		  tmp2 = m_l1_slewing_table[(qadd[isec*8 + j] << 9) + (tmp & 0x01ff)];
+		  
+		  // add this to the time sum in this section.
+		  m_trig_time[i][isec] += tmp2;
+		  
+		}
 	      
 	    }
-	  
 	}
-      
       if (_verbose) std::cout << __FILE__<<"::"<<__FUNCTION__ <<"::"<<__LINE__<< std::endl;
       
       for (i = 0; i < 2; i++)
 	{
+	  // calculate NS time sums
 	  for (j = 0 ; j < 4 ; j++)
-	    {
+	    {	     
 	      m_out_tsum[0] += m_trig_time[i][j];
 	      m_out_tsum[1] += m_trig_time[i+2][j];
 	    }
+	  // calculate NS hit amount
 	  m_out_nhit[0] += m_trig_nhit[i];
 	  m_out_nhit[1] += m_trig_nhit[i+2];
 	}
+
+      // calculate time average and the remainder
       for (i = 0; i < 2; i++)
 	{
-	  m_out_tavg[i] = 0;
-	  m_out_trem[i] = 0;
+	  m_out_tavg[i] = 0xff;
+	  m_out_trem[i] = 0xff;
 	  if (m_out_nhit[i] == 0) continue;
 	  m_out_tavg[i] = m_out_tsum[i]/m_out_nhit[i];
 	  m_out_trem[i] = m_out_tsum[i]%m_out_nhit[i];
 	}
+      
       unsigned int max = m_out_tavg[0];
       unsigned int min = m_out_tavg[1];
       if (min > max) 
@@ -250,6 +277,7 @@ int MBDTriggerEmulator::process_primitives()
 	  min = m_out_tavg[0];
 	}
       
+      // do subtraction and addition
       m_out_vtx_sub = (max - min) & 0x1ff;
       m_out_vtx_add = (m_out_tavg[0] + m_out_tavg[1]) & 0x3ff;
       
@@ -367,10 +395,5 @@ int MBDTriggerEmulator::End(PHCompositeNode* topNode)
 
   if (_verbose) std::cout << "Processed " << _nevent << " events. " << std::endl;
 
-  outfile->cd();
-  outfile->Write();
-  outfile->Close();
-  delete outfile;
-  hm->dumpHistos(outfilename, "UPDATE");
   return 0;
 }

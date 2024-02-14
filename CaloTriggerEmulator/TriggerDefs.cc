@@ -120,7 +120,7 @@ TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
     case TriggerDefs::DetectorId::hcalDId :
       return tmp/3;
       break;
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp/12;
       break;
     default :
@@ -149,7 +149,7 @@ TriggerDefs::getPrimitivePhiId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       return tmp/3;
       break;
 
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp/12;
       break;
     default :
@@ -177,7 +177,7 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
     case TriggerDefs::DetectorId::hcalDId :
       return tmp%3;
       break;
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp%12;
       break;
     default :
@@ -206,7 +206,7 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       return tmp%3;
       break;
 
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp%12;
       break;
     default :
@@ -243,7 +243,7 @@ TriggerDefs::getSumPhiId(const TriggerDefs::TriggerSumKey triggersumkey)
     case TriggerDefs::DetectorId::hcalDId :
       return tmp/4;
       break;
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp/4;
       break;
     default :
@@ -270,7 +270,7 @@ TriggerDefs::getSumEtaId(const TriggerDefs::TriggerSumKey triggersumkey)
     case TriggerDefs::DetectorId::hcalDId :
       return tmp%4;
       break;
-    case TriggerDefs::DetectorId::cemcDId :
+    case TriggerDefs::DetectorId::emcalDId :
       return tmp%4;
       break;
     default :
@@ -301,7 +301,7 @@ TriggerDefs::DetectorId TriggerDefs::GetDetectorId(std::string detector)
     else if (strcmp(detector.c_str(), "MBD") == 0) return TriggerDefs::DetectorId::mbdDId;
     else if (strcmp(detector.c_str(), "HCALIN") == 0) return TriggerDefs::DetectorId::hcalinDId;
     else if (strcmp(detector.c_str(), "HCALOUT") == 0) return TriggerDefs::DetectorId::hcaloutDId;
-    else if (strcmp(detector.c_str(), "CEMC") == 0) return TriggerDefs::DetectorId::cemcDId;
+    else if (strcmp(detector.c_str(), "EMCAL") == 0) return TriggerDefs::DetectorId::emcalDId;
     
     return TriggerDefs::DetectorId::noneDId;
     
@@ -314,7 +314,7 @@ TriggerDefs::PrimitiveId TriggerDefs::GetPrimitiveId(std::string primitive)
     else if (strcmp(primitive.c_str(), "HCALIN") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "HCALOUT") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "HCAL") == 0) return TriggerDefs::PrimitiveId::calPId;
-    else if (strcmp(primitive.c_str(), "CEMC") == 0) return TriggerDefs::PrimitiveId::calPId;
+    else if (strcmp(primitive.c_str(), "EMCAL") == 0) return TriggerDefs::PrimitiveId::calPId;
     
     return TriggerDefs::PrimitiveId::nonePId;
 

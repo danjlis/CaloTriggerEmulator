@@ -28,7 +28,7 @@ CaloPacketGetter::CaloPacketGetter(const std::string &name, const std::string &d
   , m_nchannels(192)
   , m_isdata(true)
 {
-  m_detectors["CEMC"] = DetectorSystem::CEMC;
+  m_detectors["EMCAL"] = DetectorSystem::EMCAL;
   m_detectors["MBD"] = DetectorSystem::MBD;
   m_detectors["ZDC"] = DetectorSystem::ZDC;
   m_detectors["HCALIN"] = DetectorSystem::HCALIN;
@@ -50,8 +50,8 @@ int CaloPacketGetter::InitRun(PHCompositeNode *topNode)
 
   std::cout << m_detector_type <<std::endl;
   switch (m_detector_type) {
-    case DetectorSystem::CEMC:
-      std::cout <<"CEMC Packet Getter"<<std::endl;
+    case DetectorSystem::EMCAL:
+      std::cout <<"EMCAL Packet Getter"<<std::endl;
       m_packet_low = 6001;
       m_packet_high = 6128;
       m_nchannels = 192;
@@ -105,13 +105,13 @@ int CaloPacketGetter::process_event(PHCompositeNode *topNode)
 {
   //  std::cout << m_detector_type <<std::endl;
   switch(m_detector_type){
-  case DetectorSystem::CEMC:
+  case DetectorSystem::EMCAL:
     {
       
-      m_WaveformContainer = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_CEMC");
+      m_WaveformContainer = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_EMCAL");
       if (!m_WaveformContainer)
 	{
-	  std::cout << "CEMC Waveforms not found - Fatal Error" << std::endl;
+	  std::cout << "EMCAL Waveforms not found - Fatal Error" << std::endl;
 	  exit(1);
 	}
       break;
@@ -266,21 +266,21 @@ void CaloPacketGetter::CreateNodeTree(PHCompositeNode *topNode)
   switch(m_detector_type)
     {
       
-    case DetectorSystem::CEMC:
+    case DetectorSystem::EMCAL:
       {
-	PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "CEMC"));
+	PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "EMCAL"));
 	if (!detNode)
 	  {
 	    std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
-	    detNode = new PHCompositeNode("CEMC");
+	    detNode = new PHCompositeNode("EMCAL");
 	    dst_node->addNode(detNode);
 	  }
 	
-	WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_CEMC");
+	WaveformContainerv1 *waveforms = findNode::getClass<WaveformContainerv1>(detNode, "WAVEFORMS_EMCAL");
 	if (!waveforms)
 	  {
 	    waveforms = new WaveformContainerv1();
-	    PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_CEMC", "PHObject");
+	    PHIODataNode<PHObject> *waveformcontainerNode = new PHIODataNode<PHObject>(waveforms, "WAVEFORMS_EMCAL", "PHObject");
 	    detNode->addNode(waveformcontainerNode);
 	  }
 	

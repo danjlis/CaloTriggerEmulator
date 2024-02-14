@@ -25,7 +25,7 @@ class CaloPacketGetter : public SubsysReco
   
   enum DetectorSystem
   {
-    CEMC = 0,
+    EMCAL = 0,
     HCALIN = 1,
     HCALOUT = 2,
     SEPD = 3,
