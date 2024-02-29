@@ -5,12 +5,11 @@
 #include <fun4all/Fun4AllServer.h>
 #include <fun4all/Fun4AllInputManager.h>
 #include <fun4all/Fun4AllDstInputManager.h>
-#include <calowaveformsim/TrigTreeMaker.h>
-#include <calowaveformsim/CaloWaveFormSim.h>
+#include <calowaveformsim/CaloWaveformSim.h>
 #include <DLUtility.h>
 
 R__LOAD_LIBRARY(libfun4all.so)
-R__LOAD_LIBRARY(libcalowaveformsim.so)
+R__LOAD_LIBRARY(libCaloWaveformSim.so)
 R__LOAD_LIBRARY(libtrigtreemaker.so)
 R__LOAD_LIBRARY(libdlutility.so)
 

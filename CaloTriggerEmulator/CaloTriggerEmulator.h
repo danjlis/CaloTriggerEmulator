@@ -1,7 +1,7 @@
 #ifndef _CALOTRIGGEREMULATOR_H__
 #define _CALOTRIGGEREMULATOR_H__
 
-#include <calowaveformsim/WaveformContainerv1.h>
+
 #include "TriggerPrimitive.h"
 #include "TriggerPrimitiveContainerv1.h"
 #include "TriggerDefs.h"
@@ -15,6 +15,8 @@
 #include "LL1Outv2.h"
 
 // Forward declarations
+class CDBTTree;
+class TowerInfoContainer;
 class Fun4AllHistoManager;
 class PHCompositeNode;
 class TFile;
@@ -28,10 +30,10 @@ class CaloTriggerEmulator : public SubsysReco
 {
  public:
   //! constructor
-  CaloTriggerEmulator(const std::string& name, const std::string& filename);
+  explicit CaloTriggerEmulator(const std::string& name, const std::string& filename);
 
   //! destructor
-  virtual ~CaloTriggerEmulator() override;
+  ~CaloTriggerEmulator();
 
   //! full initialization
   int Init(PHCompositeNode *) override;
@@ -62,14 +64,18 @@ class CaloTriggerEmulator : public SubsysReco
 
   int process_trigger();
 
+
+  int Download_Calibrations();
+
   //! Set TriggerType
   void setTriggerType(const std::string &name);
+  void setEmcalScale(float calib){m_emcal_GeV_per_lut = calib;}
+
   void setNSamples(int nsamples) { m_nsamples = nsamples; }
   void setThreshold(int threshold) { _m_threshold = threshold; }
 
   bool CheckFiberMasks(TriggerDefs::TriggerPrimKey key);
   bool CheckChannelMasks(TriggerDefs::TriggerSumKey key);
-  void Verbosity(const int verbosity) { _verbose = verbosity; }
 
   void identify();
  protected:
@@ -91,10 +97,10 @@ class CaloTriggerEmulator : public SubsysReco
   bool _do_mbd;
 
   //! Waveform conatiner
-  WaveformContainerv1 *_waveforms_hcalin;
-  WaveformContainerv1 *_waveforms_hcalout;
-  WaveformContainerv1 *_waveforms_emcal;
-  WaveformContainerv1 *_waveforms_mbd;
+  TowerInfoContainer *_waveforms_hcalin;
+  TowerInfoContainer *_waveforms_hcalout;
+  TowerInfoContainer *_waveforms_emcal;
+  TowerInfoContainer *_waveforms_mbd;
 
   //! LL1 Out
   LL1Outv2 *_ll1out;
@@ -112,14 +118,26 @@ class CaloTriggerEmulator : public SubsysReco
   TriggerPrimitive *_primitive;
   std::vector<unsigned int> *_sum;
   std::vector<unsigned int> *_bits;
+
   TProfile *avg_primitive;
   TH2D *peak_primitive;
   TH2D *primitives;
+  TH2D *jet_trigger_fire_map;
   TH2D *trigger_fire_map;
   TH2D *h2_line_up;
   TH1D *h_nhit;
   TH1D *h_mbd_time;
   TH1D *h_mbd_charge;
+
+  std::vector<TProfile*> v_avg_primitive_photon;
+  std::vector<TH2D*> v_peak_primitive_photon;
+  std::vector<TH2D*> v_primitives_photon;
+  std::vector<TH2D*> v_trigger_fire_map_photon;
+
+  std::vector<TProfile*> v_avg_primitive_jet;
+  std::vector<TH2D*> v_peak_primitive_jet;
+  std::vector<TH2D*> v_primitives_jet;
+  std::vector<TH2D*> v_trigger_fire_map_jet;
 
   std::vector<TProfile*> v_avg_primitive_emcal;
   std::vector<TH2D*> v_peak_primitive_emcal;
@@ -141,12 +159,23 @@ class CaloTriggerEmulator : public SubsysReco
   std::map<std::string, TH1D*> v_mbd_charge;
   std::map<std::string, TH1D*> v_mbd_time;
 
-
   //! Lookup tables
   unsigned int m_l1_adc_table[1024];
   unsigned int m_l1_adc_table_time[1024];
   unsigned int m_l1_slewing_table[4096];
   unsigned int m_l1_hcal_table[4096];
+  CDBTTree *cdbttree_emcal = nullptr;
+  CDBTTree *cdbttree_hcalin = nullptr;
+  CDBTTree *cdbttree_hcalout = nullptr;
+
+  std::string m_fieldname_emcal;
+  std::string m_calibName_emcal;
+
+  std::string m_fieldname_hcalin;
+  std::string m_calibName_hcalin;
+
+  std::string m_fieldname_hcalout;
+  std::string m_calibName_hcalout;
 
   //! Trigger primitives
   unsigned int m_trig_charge[8];
@@ -172,13 +201,12 @@ class CaloTriggerEmulator : public SubsysReco
 
   unsigned int m_nhit1, m_nhit2, m_timediff1, m_timediff2, m_timediff3;
 
-
-  std::map<int, std::vector<int>*> m_peak_sub_ped_emcal;
-  std::map<int, std::vector<int>*> m_peak_sub_ped_mbd;
-  std::map<int, std::vector<int>*> m_peak_sub_ped_hcalin;
-  std::map<int, std::vector<int>*> m_peak_sub_ped_hcalout;
+  float m_emcal_GeV_per_lut{0.0};
+  std::map<unsigned int, std::vector<int>*> m_peak_sub_ped_emcal;
+  std::map<unsigned int, std::vector<int>*> m_peak_sub_ped_mbd;
+  std::map<unsigned int, std::vector<int>*> m_peak_sub_ped_hcalin;
+  std::map<unsigned int, std::vector<int>*> m_peak_sub_ped_hcalout;
   //! Verbosity.
-  int _verbose;
   int _nevent;
   int _npassed;
   int _n_sums;
@@ -192,6 +220,7 @@ class CaloTriggerEmulator : public SubsysReco
   std::vector<unsigned int> _masks_fiber;
   std::vector<unsigned int> _masks_channel;
   std::map<TriggerDefs::DetectorId, int> _m_prim_map;
+  std::map<TriggerDefs::TriggerId, int> _m_prim_ll1_map;
   std::map<TriggerDefs::TriggerId, std::vector<std::string>> _m_det_map;
 };
 

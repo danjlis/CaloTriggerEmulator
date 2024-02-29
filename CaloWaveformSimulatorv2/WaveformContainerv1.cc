@@ -56,9 +56,9 @@ void WaveformContainerv1::set_Detector(std::string &det_name)
     {
       _det = WaveformContainer::DETECTOR::ALL;
     }
- if (strcmp(det_name.c_str(),"CEMC") == 0)
+ if (strcmp(det_name.c_str(),"EMCAL") == 0)
     {
-      _det = WaveformContainer::DETECTOR::CEMC;
+      _det = WaveformContainer::DETECTOR::EMCAL;
     }
   if (strcmp(det_name.c_str(),"HCALIN") == 0)
     {

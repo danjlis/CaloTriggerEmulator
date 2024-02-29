@@ -1,6 +1,7 @@
 #include "TriggerDefs.h"
 #include <bitset>
 #include <cstring>
+#include <calobase/TowerInfoDefs.h>
 
 uint32_t
 TriggerDefs::getTriggerKey(const TriggerDefs::TriggerId triggerId)
@@ -106,7 +107,7 @@ uint16_t
 TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(const TriggerDefs::TriggerPrimKey triggerprimkey)
 {
   uint32_t detId= getDetectorId_from_TriggerPrimKey(triggerprimkey);
-
+  uint32_t primId= getPrimitiveId_from_TriggerPrimKey(triggerprimkey);
   uint16_t tmp = (triggerprimkey >> kBitShiftPrimitiveLocId) & 0x1ff;
   
   switch (detId)
@@ -121,8 +122,16 @@ TriggerDefs::getPrimitivePhiId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
       return tmp/3;
       break;
     case TriggerDefs::DetectorId::emcalDId :
-      return tmp/12;
-      break;
+      if (primId == TriggerDefs::PrimitiveId::calPId)
+	{
+	  return tmp/12;
+	  break;
+	}
+      else if (primId == TriggerDefs::PrimitiveId::jetPId)
+	{
+	  return tmp;
+	  break;
+	}
     default :
       return UINT16_MAX;
       break;
@@ -134,7 +143,7 @@ uint16_t
 TriggerDefs::getPrimitivePhiId_from_TriggerSumKey(const TriggerDefs::TriggerSumKey triggersumkey)
 {
   uint32_t detId= getDetectorId_from_TriggerSumKey(triggersumkey);
-
+  uint32_t primId= getPrimitiveId_from_TriggerPrimKey(triggersumkey);
   uint16_t tmp = (triggersumkey >> kBitShiftPrimitiveLocId) & 0x1ff;
   
   switch (detId)
@@ -150,10 +159,17 @@ TriggerDefs::getPrimitivePhiId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       break;
 
     case TriggerDefs::DetectorId::emcalDId :
-      return tmp/12;
-      break;
-    default :
-      return UINT16_MAX;
+      if (primId == TriggerDefs::PrimitiveId::calPId)
+	{
+	  return tmp/12;
+	  break;
+	}
+      if (primId == TriggerDefs::PrimitiveId::jetPId)
+	{
+	  return tmp;
+	  break;
+	}
+
       break;
     }
   return UINT16_MAX;
@@ -163,9 +179,9 @@ uint16_t
 TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(const TriggerDefs::TriggerPrimKey triggerprimkey)
 {
   uint32_t detId= getDetectorId_from_TriggerPrimKey(triggerprimkey);
+  uint32_t primId= getPrimitiveId_from_TriggerPrimKey(triggerprimkey);
 
   uint16_t tmp = (triggerprimkey >> kBitShiftPrimitiveLocId) & 0x1ff;
-  
   switch (detId)
     {
     case TriggerDefs::DetectorId::mbdDId :
@@ -178,12 +194,23 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerPrimKey(const TriggerDefs::TriggerPri
       return tmp%3;
       break;
     case TriggerDefs::DetectorId::emcalDId :
-      return tmp%12;
-      break;
+
+      if (primId == TriggerDefs::PrimitiveId::calPId)
+	{
+	  return tmp%12;
+	  break;
+	}
+      else if (primId == TriggerDefs::PrimitiveId::jetPId)
+	{
+	  return 0;
+	  break;
+	}
+      
     default :
       return UINT16_MAX;
       break;
     }
+
   return UINT16_MAX;
 }
 
@@ -191,7 +218,7 @@ uint16_t
 TriggerDefs::getPrimitiveEtaId_from_TriggerSumKey(const TriggerDefs::TriggerSumKey triggersumkey)
 {
   uint32_t detId= getDetectorId_from_TriggerSumKey(triggersumkey);
-
+  uint32_t primId= getPrimitiveId_from_TriggerSumKey(triggersumkey);
   uint16_t tmp = (triggersumkey >> kBitShiftPrimitiveLocId) & 0x1ff;
   
   switch (detId)
@@ -207,8 +234,16 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
       break;
 
     case TriggerDefs::DetectorId::emcalDId :
-      return tmp%12;
-      break;
+      if (primId == TriggerDefs::PrimitiveId::calPId)
+	{
+	  return tmp%12;
+	  break;
+	}
+      if (primId == TriggerDefs::PrimitiveId::jetPId)
+	{
+	  return 0;
+	  break;
+	}
     default :
       return UINT16_MAX;
       break;
@@ -219,7 +254,7 @@ TriggerDefs::getPrimitiveEtaId_from_TriggerSumKey(const TriggerDefs::TriggerSumK
 uint16_t 
 TriggerDefs::getSumLocId(const TriggerDefs::TriggerSumKey triggersumkey)
 {
-  uint16_t tmp = (triggersumkey >> kBitShiftSumLocId) & 0xf;
+  uint16_t tmp = (triggersumkey >> kBitShiftSumLocId) & 0x1f;
   return tmp;
 }
 uint16_t 
@@ -280,12 +315,39 @@ TriggerDefs::getSumEtaId(const TriggerDefs::TriggerSumKey triggersumkey)
   return UINT16_MAX;
 }
 
+uint32_t 
+TriggerDefs::GetTowerInfoKey( const TriggerDefs::DetectorId detId, const uint16_t iprim, const uint16_t isum, const uint16_t itower )
+{
+  unsigned int phibin = 0;
+  unsigned int etabin = 0;
+  switch (detId)
+    {
+    case TriggerDefs::DetectorId::emcalDId:
+      phibin = 8*(iprim/12) + 2*(isum/4) + (itower/2);
+      etabin = 8*(iprim%12) + 2*(isum%4) + (itower%2);
+      if (phibin < 0 || phibin > 255 || etabin < 0 || etabin > 95) 
+	{
+	  std::cout << "PHIBIN eTABIN BADD: "<<phibin << " " <<etabin<<std::endl;
+	  return UINT16_MAX; 
+	  break;
+	}
+      return TowerInfoDefs::encode_emcal(etabin, phibin);	  ;
+      break;
+
+    default :
+      return UINT16_MAX; 
+      break;
+    }
+
+  return UINT16_MAX;
+}
 TriggerDefs::TriggerId TriggerDefs::GetTriggerId(std::string trigger)
   {
 
     if (strcmp(trigger.c_str(), "NONE") == 0) return TriggerDefs::TriggerId::noneTId;
     else if (strcmp(trigger.c_str(), "MBD") == 0) return TriggerDefs::TriggerId::mbdTId;
     else if (strcmp(trigger.c_str(), "JET") == 0) return TriggerDefs::TriggerId::jetTId;
+    else if (strcmp(trigger.c_str(), "PHOTON") == 0) return TriggerDefs::TriggerId::photonTId;
     else if (strcmp(trigger.c_str(), "PAIR") == 0) return TriggerDefs::TriggerId::pairTId;
     else if (strcmp(trigger.c_str(), "COSMIC") == 0) return TriggerDefs::TriggerId::cosmicTId;
     else if (strcmp(trigger.c_str(), "COSMIC_COIN") == 0) return TriggerDefs::TriggerId::cosmic_coinTId;
@@ -315,6 +377,7 @@ TriggerDefs::PrimitiveId TriggerDefs::GetPrimitiveId(std::string primitive)
     else if (strcmp(primitive.c_str(), "HCALOUT") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "HCAL") == 0) return TriggerDefs::PrimitiveId::calPId;
     else if (strcmp(primitive.c_str(), "EMCAL") == 0) return TriggerDefs::PrimitiveId::calPId;
+    else if (strcmp(primitive.c_str(), "JET") == 0) return TriggerDefs::PrimitiveId::jetPId;
     
     return TriggerDefs::PrimitiveId::nonePId;
 

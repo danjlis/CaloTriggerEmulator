@@ -21,7 +21,7 @@ class WaveformContainer : public PHObject
   enum DETECTOR
   {
     ALL = 0,
-    CEMC = 1,
+    EMCAL = 1,
     HCALOUT = 2,
     HCALIN = 3,
     SEPD = 4,

@@ -87,7 +87,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   std::string noisefilename;
   if (noiseenv == nullptr)
     {
-      const char *offline_main = getenv("OFFLINE_MAIN");
+      const char *offline_main = getenv("MYINSTALL");
       assert(offline_main);
       noisefilename = offline_main;
       noisefilename += "/share/calowaveformsim/";
@@ -131,25 +131,25 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   //----------------------------------------------------------------------------------------------------
 
 
-  const char *cemcenv = getenv("CALOWAVEFORMSIM_TEMPLATE_CEMC");
-  std::string cemcfilename;
+  const char *emcalenv = getenv("CALOWAVEFORMSIM_TEMPLATE_CEMC");
+  std::string emcalfilename;
   if (noiseenv == nullptr)
     {
-      const char *offline_main = getenv("OFFLINE_MAIN");
+      const char *offline_main = getenv("MYINSTALL");
       assert(offline_main);
-      cemcfilename = offline_main;
-      cemcfilename += "/share/calowaveformsim/testbeam_cemc_template.root";     
+      emcalfilename = offline_main;
+      emcalfilename += "/share/calowaveformsim/testbeam_emcal_template.root";     
     }
   else 
     {
-      cemcfilename = cemcenv;
+      emcalfilename = emcalenv;
 
     }
   const char *ihcalenv = getenv("CALOWAVEFORMSIM_TEMPLATE_IHCAL");
   std::string ihcalfilename;
   if (noiseenv == nullptr)
     {
-      const char *offline_main = getenv("OFFLINE_MAIN");
+      const char *offline_main = getenv("MYINSTALL");
       assert(offline_main);
       ihcalfilename = offline_main;
       ihcalfilename += "/share/calowaveformsim/testbeam_ihcal_template.root";     
@@ -163,7 +163,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   std::string ohcalfilename;
   if (noiseenv == nullptr)
     {
-      const char *offline_main = getenv("OFFLINE_MAIN");
+      const char *offline_main = getenv("MYINSTALL");
       assert(offline_main);
       ohcalfilename = offline_main;
       ohcalfilename += "/share/calowaveformsim/testbeam_ohcal_template.root";     
@@ -177,7 +177,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
   std::string mbdfilename;
   if (noiseenv == nullptr)
     {
-      const char *offline_main = getenv("OFFLINE_MAIN");
+      const char *offline_main = getenv("MYINSTALL");
       assert(offline_main);
       mbdfilename = offline_main;
       mbdfilename += "/share/calowaveformsim/laser_mbd_template.root";     
@@ -188,7 +188,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
     }
 
 
-  TFile* fin1 = TFile::Open(cemcfilename.c_str());
+  TFile* fin1 = TFile::Open(emcalfilename.c_str());
   assert(fin1);
   assert(fin1->IsOpen());
   h_template_emcal = static_cast<TProfile*>(fin1->Get("waveform_template"));
@@ -214,7 +214,7 @@ int CaloWaveFormSim::Init(PHCompositeNode*)
 
   for (int i = 0 ; i < 24576;i++)
     {
-      for (int j = 0; j < _nsamples; j++) m_waveform_cemc[i].push_back(0.);
+      for (int j = 0; j < _nsamples; j++) m_waveform_emcal[i].push_back(0.);
     }
 
   for (int i = 0 ; i < 1536;i++)
@@ -237,7 +237,7 @@ double CaloWaveFormSim::template_function_mbd(double *x, double *par)
   return par[0]*h_template_mbd->Interpolate(x[0]-par[1])+par[2];
 }
 
-double CaloWaveFormSim::template_function_cemc(double *x, double *par)
+double CaloWaveFormSim::template_function_emcal(double *x, double *par)
 { 
   return par[0]*h_template_emcal->Interpolate(x[0]-par[1])+par[2];
 }
@@ -272,14 +272,14 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
     }
   PHNodeIterator dstIter(dstNode);
 
-  // Create nodes for CEMC
+  // Create nodes for EMCAL
   if (IsDetector("MBD"))
     {
       PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "MBD"));
       if (!detNode)
 	{
 	  std::cout << PHWHERE << "Detector Node missing, making one"<<std::endl;
-	  detNode = new PHCompositeNode("CEMC");
+	  detNode = new PHCompositeNode("MBD");
 	  dstNode->addNode(detNode);
 	}
       
@@ -293,8 +293,8 @@ void CaloWaveFormSim::CreateNodes(PHCompositeNode* topNode)
     }
 
 
-  // Create nodes for CEMC
-  if (IsDetector("CEMC"))
+  // Create nodes for EMCAL
+  if (IsDetector("EMCAL"))
     {
       PHCompositeNode *detNode = dynamic_cast<PHCompositeNode *>(dstIter.findFirst("PHCompositeNode", "CEMC"));
       if (!detNode)
@@ -367,11 +367,11 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   
   if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
 
-  if (IsDetector("CEMC"))
+  if (IsDetector("EMCAL"))
     {  
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
-      waveforms_cemc = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_CEMC");
-      if (!waveforms_cemc)
+      waveforms_emcal = findNode::getClass<WaveformContainerv1>(topNode, "WAVEFORMS_CEMC");
+      if (!waveforms_emcal)
 	{
 	  std::cout << "Waveforms not found - Fatal Error" << std::endl;
 	  exit(1);
@@ -395,10 +395,10 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	}
 
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
-      _hits_cemc = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_CEMC");
-      if (!_hits_cemc)
+      _hits_emcal = findNode::getClass<PHG4HitContainer>(topNode, "G4HIT_CEMC");
+      if (!_hits_emcal)
 	{
-	  std::cout << "Hits EMCAL not found " << std::endl;
+	  std::cout << "Hits CEMC not found " << std::endl;
 	  exit(1);
 	}
     }
@@ -470,8 +470,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
   for (int i = 0 ; i < 24576;i++)
     {
-      m_waveform_cemc[i].clear();
-      for (int j = 0; j < _nsamples; j++) m_waveform_cemc[i].push_back(0.);
+      m_waveform_emcal[i].clear();
+      for (int j = 0; j < _nsamples; j++) m_waveform_emcal[i].push_back(0.);
     }
 
   for (int i = 0 ; i < 1536;i++)
@@ -497,8 +497,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   TF1 *f_fit_mbd = new TF1("f_fit_mbd",template_function_mbd,0,31,3);
   f_fit_mbd->SetParameters(1,0,0);
 
-  TF1 *f_fit_cemc = new TF1("f_fit_cemc",template_function_cemc,0,31,3);
-  f_fit_cemc->SetParameters(1,0,0);
+  TF1 *f_fit_emcal = new TF1("f_fit_emcal",template_function_emcal,0,31,3);
+  f_fit_emcal->SetParameters(1,0,0);
 
   TF1 *f_fit_ihcal = new TF1("f_fit_ihcal",template_function_ihcal,0,31,3);
   f_fit_ihcal->SetParameters(1,0,0);
@@ -514,8 +514,8 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   float _shiftval_mbd = 4-f_fit_mbd->GetMaximumX();
   f_fit_mbd->SetParameters(1,_shiftval_mbd,0);
 
-  float _shiftval_cemc = 4-f_fit_cemc->GetMaximumX();
-  f_fit_cemc->SetParameters(1,_shiftval_cemc,0);
+  float _shiftval_emcal = 4-f_fit_emcal->GetMaximumX();
+  f_fit_emcal->SetParameters(1,_shiftval_emcal,0);
 
   float _shiftval_ihcal = 4-f_fit_ihcal->GetMaximumX();
   f_fit_ihcal->SetParameters(1,_shiftval_ihcal,0);
@@ -524,7 +524,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   f_fit_ohcal->SetParameters(1,_shiftval_ohcal,0);
 
 
-  if (IsDetector("CEMC"))
+  if (IsDetector("EMCAL"))
     {
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
       //-----------------------------------------------------------------------
@@ -541,7 +541,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       PHG4CylinderCellGeom *geo_raw = _seggeo->GetFirstLayerCellGeom();
       PHG4CylinderCellGeom_Spacalv1 *geo = dynamic_cast<PHG4CylinderCellGeom_Spacalv1 *>(geo_raw);
       if (_verbose) std::cout << __FILE__ << " :: "<<__FUNCTION__ <<" :: " << __LINE__ << std::endl;
-      PHG4HitContainer::ConstRange hit_range = _hits_cemc->getHits();
+      PHG4HitContainer::ConstRange hit_range = _hits_emcal->getHits();
 
       for (PHG4HitContainer::ConstIterator hit_iter = hit_range.first; hit_iter != hit_range.second; hit_iter++)
 	{
@@ -604,19 +604,22 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  //---------------------------------------------------------------------
 	  // float t0 = 0.5*(hit_iter->second->get_t(0)+hit_iter->second->get_t(1)) / 16.66667;   //Average of g4hit time downscaled by 16.667 ns/time sample 
 	  float t0 = (hit_iter->second->get_t(0)) / 16.66667;   //Place waveform at the starting time of the G4hit, avoids issues caused by excessively long lived g4hits
-	  float tmax = 16.667*16;
+	  float tmax = 16.667*_nsamples;
 	  float tmin = -20;
-	  f_fit_cemc->SetParameters(light_yield*26000,_shiftval_cemc+t0,0);            //Set the waveform template to match the expected signal from such a hit
+	  f_fit_emcal->SetParameters(light_yield*26000,_shiftval_emcal+t0,0);            //Set the waveform template to match the expected signal from such a hit
 
 	  //-------------------------------------------------------------------------------------------------------------
 	  //For each tower add the new waveform contribution to the total waveform
 	  //-------------------------------------------------------------------------------------------------------------
 	  if (hit_iter->second->get_edep()*26000 > 1 && hit_iter->second->get_t(1) >= tmin && hit_iter->second->get_t(0) <= tmax)
 	    {
+	      std::cout <<"here: "<< towernumber << ": " ;
 	      for (int j = 0; j < _nsamples;j++) // 16 is the number of time samples
 		{
-		  m_waveform_cemc[towernumber][j] += f_fit_cemc->Eval(j);
+		  std::cout << " "<<f_fit_emcal->Eval(j);
+		  m_waveform_emcal[towernumber][j] += f_fit_emcal->Eval(j);
 		}
+	      std::cout << " " <<std::endl;
 	    }
 	}
     }
@@ -677,7 +680,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  //---------------------------------------------------------------------
 	  // float t0 = 0.5*(hit_iter->second->get_t(0)+hit_iter->second->get_t(1)) / 16.66667;   //Average of g4hit time downscaled by 16.667 ns/time sample 
 	  float t0 = (hit_iter->second->get_t(0)) / 16.66667;   //Place waveform at the starting time of the G4hit, avoids issues caused by excessively long lived g4hits
-	  float tmax = 16.667*16;
+	  float tmax = 16.667*_nsamples;
 	  float tmin = -20;
 	  f_fit_ihcal->SetParameters(light_yield*2600,_shiftval_ihcal+t0,0);            //Set the waveform template to match the expected signal from such a hit
 	  //-------------------------------------------------------------------------------------------------------------
@@ -685,7 +688,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  //-------------------------------------------------------------------------------------------------------------
 	  if (hit_iter->second->get_edep()*2600 > 1 &&hit_iter->second->get_t(1) >= tmin && hit_iter->second->get_t(0) <= tmax )
 	    {
-	      for (int j = 0; j < 16;j++) // 16 is the number of time samples
+	      for (int j = 0; j < _nsamples;j++) // 16 is the number of time samples
 		{
 		  m_waveform_ihcal[towernumber][j] +=f_fit_ihcal->Eval(j);
 		}
@@ -754,7 +757,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
 	  float adc_signal = towerinfo->get_energy() * _hcalout_lightyield_to_ADC;
 	  float t0 = 0;
-	  float tmax =16.667*16 ;
+	  float tmax =16.667*_nsamples ;
 	  float tmin = -20;
 	  f_fit_ohcal->SetParameters(adc_signal,_shiftval_ohcal+t0,0);            //Set the waveform template to match the expected signal from such a hit
 
@@ -764,7 +767,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       
 	  if (towerinfo->get_energy()*5000 > 1 && towerinfo->get_time() >= tmin && towerinfo->get_time() <= tmax)
 	    {
-	      for (int j = 0; j < 16;j++) // 16 is the number of time samples
+	      for (int j = 0; j < _nsamples;j++) // _nsamples is the number of time samples
 		{
 		  m_waveform_ohcal[towernumber][j] +=f_fit_ohcal->Eval(j);
 		}
@@ -796,14 +799,14 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 
 	  f_fit_mbd->SetParameters(adc,_shiftval_mbd+t0,0);            //Set the wavefor
 	  
-	  for (int j = 0; j < 16;j++) // 16 is the number of time samples
+	  for (int j = 0; j < _nsamples;j++) // 16 is the number of time samples
 	    {
 	      m_waveform_mbd[ipmtq][j] += f_fit_mbd->Eval(j);
 	    }
 	    
 	  f_fit_mbd->SetParameters(tdc0_dig,_shiftval_mbd+t0,0);            //Set the wavefor
 
-	  for (int j = 0; j < 16;j++) // 16 is the number of time samples
+	  for (int j = 0; j < _nsamples;j++) // _nsamples is the number of time samples
 	    {
 	      m_waveform_mbd[ipmtt][j] += f_fit_mbd->Eval(j);
 	    }
@@ -820,7 +823,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
   //-----------------------------
   // do noise for EMCal:
   //-----------------------------
-  if (IsDetector("CEMC"))
+  if (IsDetector("EMCAL"))
     {
       for (int i = 0; i < 24576;i++)
 	{
@@ -829,13 +832,14 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
       
 	  std::vector<int> *wave = new vector<int>;
 	  wave->clear();
-      
-	  for (int k = 0; k < 16;k++)
+
+	  for (int k = 0; k < _nsamples;k++)
 	    {
-	      m_waveform_cemc[i][k] = m_waveform_cemc[i][k]+(noise_val[k]-1500)/16.0+1500;
-	      wave->push_back(static_cast<int>(m_waveform_cemc[i][k]));
+	      m_waveform_emcal[i][k] = m_waveform_emcal[i][k]+(noise_val[k]-1500)/16.0+1500;
+	      wave->push_back(static_cast<int>(m_waveform_emcal[i][k]));
+	      if (m_waveform_emcal[i][k] > 1700.) cout << "HIT " << i << std::endl;
 	    }
-	  waveforms_cemc->set_waveform_at_channel(i, wave);
+	  waveforms_emcal->set_waveform_at_channel(i, wave);
 	}
     }
   //---------------------------
@@ -850,7 +854,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  wave->clear();
 	  noise->GetEntry(noise_waveform);     
       
-	  for (int k = 0; k < 16;k++)
+	  for (int k = 0; k < _nsamples;k++)
 	    {
 	      m_waveform_ihcal[i][k] = m_waveform_ihcal[i][k]+(noise_val[k]-1500)/16.0+1500;
 	      wave->push_back(static_cast<int>(m_waveform_ihcal[i][k]));
@@ -870,7 +874,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  std::vector<int> *wave = new vector<int>;
 	  wave->clear();      
       
-	  for (int k = 0; k < 16;k++)
+	  for (int k = 0; k < _nsamples;k++)
 	    {
 	      m_waveform_ohcal[i][k] = m_waveform_ohcal[i][k]+(noise_val[k]-1500)/16.0+1500;
 	      wave->push_back(static_cast<int>(m_waveform_ohcal[i][k]));
@@ -889,7 +893,7 @@ int CaloWaveFormSim::process_g4hits(PHCompositeNode* topNode)
 	  std::vector<int> *wave = new vector<int>;
 	  wave->clear();
       
-	  for (int k = 0; k < 16;k++)
+	  for (int k = 0; k < _nsamples;k++)
 	    {
 	      m_waveform_mbd[i][k] = m_waveform_mbd[i][k]+(noise_val[k]-1500)/16.0+1500;
 	      wave->push_back(static_cast<int>(m_waveform_mbd[i][k]));

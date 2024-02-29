@@ -1,20 +1,10 @@
-#ifndef CALOWAVEFORMSIM_H__
-#define CALOWAVEFORMSIM_H__
-#include "g4detectors/PHG4CylinderCellGeomContainer.h"
-#include <mbd/MbdPmtContainer.h>
-#include <mbd/MbdPmtHit.h>
+#ifndef CALOWAVEFORMTOY_H__
+#define CALOWAVEFORMTOY_H__
 #include <fun4all/SubsysReco.h>
 #include <TTree.h>
 #include <TProfile.h>
 #include <TRandom3.h>
-#include <caloreco/CaloWaveformProcessing.h>
-#include <g4detectors/PHG4CylinderGeomContainer.h>
-#include <g4detectors/PHG4FullProjSpacalCellReco.h>
 #include "WaveformContainerv1.h"
-#include <g4main/PHG4HitContainer.h>
-#include <g4detectors/PHG4CellContainer.h>
-#include <g4main/PHG4TruthInfoContainer.h>
-#include <calobase/TowerInfoContainerv1.h>
 
 // Forward declarations
 class Fun4AllHistoManager;
@@ -24,14 +14,14 @@ class TFile;
 class TNtuple;
 class TTree;
 
-class CaloWaveFormSim : public SubsysReco
+class CaloWaveFormToy : public SubsysReco
 {
  public:
   //! constructor
-  CaloWaveFormSim(const std::string &name = "CaloWaveFormSim", const std::string &fname = "MyNtuple.root");
+  CaloWaveFormToy(const std::string &name = "CaloWaveFormToy", const std::string &fname = "MyNtuple.root");
 
   //! destructor
-  virtual ~CaloWaveFormSim();
+  virtual ~CaloWaveFormToy();
 
 
   //! full initialization
@@ -45,15 +35,11 @@ class CaloWaveFormSim : public SubsysReco
   //! end of run method
   int End(PHCompositeNode *);
 
-  int process_g4hits(PHCompositeNode *);
-  int process_g4cells(PHCompositeNode *);
-  int process_towers(PHCompositeNode *);
-  int process_clusters(PHCompositeNode *);
-
   void Detector(const std::string &name) { detector = name; }
   void setNSamples(int nsamples) { _nsamples = nsamples; }
-  void SetNoise(int noiselevel) { _noiselevel = noiselevel; }
-  void SetGain(std::string gain){ _gain = _gain_opts[gain];}
+
+  void setToyType(int type) { _type = type; }
+  void setOccupancy(float occ){ _occupancy = occ; }
 
  private:
   std::string detector;
@@ -68,31 +54,20 @@ class CaloWaveFormSim : public SubsysReco
   static TProfile* h_template_ohcal;
 
 
-  LightCollectionModel light_collection_model;
-
-  int _noiselevel = 0;
-  TTree* noise;
-
-  float noise_val[31];
-
   TRandom3* rnd;
   int _verbose = 1;
   int _nsamples = 16;
 
-  enum GAIN {
-    LOW = 0,
-    HIGH = 1
+  enum TOY {
+    SQUARE = 0,
+    PULSE = 1
   };
 
-  int _gain= GAIN::LOW;
 
-
-
-  float _hcalout_lightyield_to_ADC = 0.001;
-  
-  std::map<std::string, int>  _gain_opts;
-
+  int _type = 0;
+  float _occupancy = 1.0;
   int ROWDIM = 320;
+
   int COLUMNDIM = 27;
  
   static double template_function_mbd(double *x, double *par);
@@ -106,14 +81,7 @@ class CaloWaveFormSim : public SubsysReco
   WaveformContainerv1 *waveforms_hcalout;
   WaveformContainerv1 *waveforms_hcalin;
   WaveformContainerv1 *waveforms_mbd;
-  PHG4CylinderGeomContainer *_layergeo;
-  PHG4CylinderCellGeomContainer *_seggeo;
-  PHG4HitContainer *_hits_emcal;
-  PHG4HitContainer *_hits_ihcal;
-  PHG4CellContainer *_slats_ohcal;
-  TowerInfoContainerv1 *_raw_towers_ohcal;
 
-  MbdPmtContainer *_mbdpmts;
 };
 
 #endif

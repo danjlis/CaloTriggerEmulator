@@ -18,6 +18,7 @@ AM_LDFLAGS = -L$(libdir) -L$(OFFLINE_MAIN)/lib
 
 libll1out_la_LIBADD = \
 	-lphool \
+	-lcalo_reco \
 	-lfun4all
 
 libmbdtriggeremulator_la_LIBADD = \
@@ -26,6 +27,7 @@ libmbdtriggeremulator_la_LIBADD = \
 	-lg4detectors \
 	-lonnxruntime \
 	-lcalowaveformsim \
+	-lcalo_reco \
 	libll1out.la
 
 libmbdpmtbuilder_la_LIBADD = \
@@ -42,7 +44,9 @@ libcalotriggeremulator_la_LIBADD = \
 	-lg4detectors \
 	-lonnxruntime \
 	libll1out.la \
-	-lcalowaveformsim
+	-lcalo_reco \
+	-lcalowaveformsim \
+	-lffamodules 
 
 libcalopacketgetter_la_LIBADD = \
 	-lphool \

@@ -30,14 +30,15 @@ pkginclude_HEADERS = \
 	WaveformReturnCodes.h \
 	WaveformContainer.h \
 	WaveformContainerv1.h \
-	CaloWaveFormSim.h
+	CaloWaveFormSim.h \
+	CaloWaveFormToy.h
 
 pkgdata_DATA = \
 	no_raddmgnoise.csv \
 	low_raddmgnoise.csv \
 	medium_raddmgnoise.csv \ 
 	high_raddmgnoise.csv \
-	testbeam_cemc_template.root \
+	testbeam_emcal_template.root \
 	testbeam_ihcal_template.root \
 	testbeam_ohcal_template.root \
 	laser_mbd_template.root 
@@ -53,7 +54,8 @@ libcalowaveformsim_la_SOURCES = \
 	WaveformContainerv1_Dict.cc \
 	WaveformContainer.cc \
 	WaveformContainerv1.cc \
-	CaloWaveFormSim.cc
+	CaloWaveFormSim.cc \
+	CaloWaveFormToy.cc
 
 
 %_Dict.cc: %.h %LinkDef.h

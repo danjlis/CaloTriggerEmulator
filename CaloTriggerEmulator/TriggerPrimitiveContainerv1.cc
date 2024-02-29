@@ -50,7 +50,7 @@ int TriggerPrimitiveContainerv1::isValid() const
   return (!_primitives.empty());
 }
 
-TriggerPrimitive* TriggerPrimitiveContainerv1::get_primitive_at_key(TriggerDefs::TriggerKey key)
+TriggerPrimitive* TriggerPrimitiveContainerv1::get_primitive_at_key(TriggerDefs::TriggerPrimKey key)
 {
   if (!_primitives[key]) return nullptr;
   

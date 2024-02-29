@@ -14,6 +14,8 @@ pkginclude_HEADERS = \
   MBDEmulatorTreeMakerLinkDef.h \
   HCALEmulatorTreeMaker.h \
   HCALEmulatorTreeMakerLinkDef.h \
+  CaloEmulatorTreeMakerLinkDef.h \
+  CaloEmulatorTreeMaker.h \
   TrigTreeMaker.h \
   TrigTreeMakerLinkDef.h \
   WaveTreeMaker.h \
@@ -30,7 +32,8 @@ lib_LTLIBRARIES = \
   libtrigtreemaker.la \
   libwavetreemaker.la \
   libmbdemulatortreemaker.la \
-  libhcalemulatortreemaker.la
+  libhcalemulatortreemaker.la \
+  libcaloemulatortreemaker.la
 
 libtrigtreemaker_io_la_SOURCES = \
   $(ROOTDICTS) 
@@ -82,6 +85,14 @@ libhcalemulatortreemaker_la_LIBADD = \
   -lll1out \
   -lSubsysReco
 
+libcaloemulatortreemaker_la_SOURCES = \
+  CaloEmulatorTreeMaker.cc
+
+libcaloemulatortreemaker_la_LIBADD = \
+  -lcalowaveformsim \
+  -lll1out \
+  -lSubsysReco
+
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^
 
@@ -95,7 +106,8 @@ noinst_PROGRAMS = \
   testexternals \
   testexternals_wave \
   testexternals_mbd \
-  testexternals_hcal
+  testexternals_hcal \
+  testexternals_calo
 
 testexternals_io_SOURCES = testexternals.cc
 testexternals_io_LDADD   = libtrigtreemaker_io.la
@@ -111,6 +123,9 @@ testexternals_mbd_LDADD   = libmbdemulatortreemaker.la
 
 testexternals_hcal_SOURCES = testexternals.cc
 testexternals_hcal_LDADD   = libhcalemulatortreemaker.la
+
+testexternals_calo_SOURCES = testexternals.cc
+testexternals_calo_LDADD   = libcaloemulatortreemaker.la
 
 testexternals.cc:
 	echo "//*** this is a generated file. Do not commit, do not edit" > $@
